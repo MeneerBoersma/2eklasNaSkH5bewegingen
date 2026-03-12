@@ -24,39 +24,39 @@ const { useState, useEffect } = React;
 const SHOP = {
   body: [
     { id:"body_student", emoji:"🧑‍🎓", name:"Student",   price:0,  unlocked:true },
-    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:40 },
-    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:60 },
-    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:100},
-    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:80 },
-    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:50 },
+    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:80  },
+    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:120 },
+    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:200 },
+    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:160 },
+    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:100 },
   ],
   hat: [
     { id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0,  unlocked:true },
-    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:15 },
-    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:25 },
-    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:50 },
-    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:35 },
-    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:30 },
-    { id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:20 },
+    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:30  },
+    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:50  },
+    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:100 },
+    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:70  },
+    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:60  },
+    { id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:40  },
   ],
   badge: [
-    { id:"badge_none",   emoji:"",   name:"Geen badge", price:0,  unlocked:true },
-    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:15 },
-    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:40 },
-    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:20 },
-    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:30 },
-    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:25 },
-    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:60 },
-    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:45 },
+    { id:"badge_none",   emoji:"",   name:"Geen badge", price:0,   unlocked:true },
+    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:30  },
+    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:80  },
+    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:40  },
+    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:60  },
+    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:50  },
+    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:120 },
+    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:90  },
   ],
   bg: [
-    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",          name:"Standaard", price:0,  unlocked:true },
-    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",      price:30 },
-    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",          name:"Ruimte",    price:25 },
-    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",          name:"Natuur",    price:20 },
-    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",      price:20 },
-    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",      price:35 },
-    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog", price:80 },
+    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",          name:"Standaard", price:0,   unlocked:true },
+    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",      price:60  },
+    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",          name:"Ruimte",    price:50  },
+    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",          name:"Natuur",    price:40  },
+    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",      price:40  },
+    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",      price:70  },
+    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog", price:160 },
   ],
 };
 
@@ -318,11 +318,17 @@ function App() {
         if(d.avatar){const av={...DEFAULT_AVATAR,...d.avatar};if(av.face&&!av.badge){av.badge="badge_none";delete av.face;}setAvatar(av);}
         if(d.owned){const ow=d.owned.filter(id=>!id.startsWith("face_"));if(!ow.includes("badge_none"))ow.push("badge_none");setOwned(ow);}
         if(d.pts!==undefined) setPts(d.pts);
+        if(d.stars_53) setStars(d.stars_53);
       }
     } catch(e){}
   },[]);
 
-  const save=(av,ow,p)=>{ try{localStorage.setItem("beweging_save",JSON.stringify({avatar:av,owned:ow,pts:p}));}catch(e){} };
+  const save=(av,ow,p,st)=>{
+    try{
+      const prev=JSON.parse(localStorage.getItem("beweging_save"))||{};
+      localStorage.setItem("beweging_save",JSON.stringify({...prev,avatar:av,owned:ow,pts:p,...(st?{stars_53:st}:{})}));
+    }catch(e){}
+  };
 
   const addPoints=n=>setPts(p=>{const np=p+n;save(avatar,owned,np);return np;});
 
@@ -357,7 +363,12 @@ function App() {
     if(qIdx+1<total){setQIdx(i=>i+1);}
     else{
       const pct=scores[lvlIdx]/total;
-      setStars(s=>{const n=[...s];n[lvlIdx]=pct>=.85?3:pct>=.6?2:pct>=.33?1:0;return n;});
+      const newStar=pct>=.85?3:pct>=.6?2:pct>=.33?1:0;
+      setStars(s=>{
+        const n=[...s];n[lvlIdx]=newStar;
+        save(avatar,owned,pts,n); // persist stars_53
+        return n;
+      });
       setScreen("result");
     }
   };
@@ -383,6 +394,7 @@ function App() {
       {/* HEADER */}
       <div style={{background:"rgba(255,255,255,.03)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"9px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <a href="index.html" style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,textDecoration:"none"}}>⚡ Home</a>
           {screen!=="home"&&<button onClick={goHome} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,marginRight:2}}>← Levels</button>}
           <span style={{fontSize:20}}>🚀</span>
           <div><div style={{fontWeight:700,fontSize:13}}>BewegingsGame</div><div style={{fontSize:10,color:"#64748b"}}>2 HAVO · §5.3</div></div>
