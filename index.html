@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BewegingsGame — 2 HAVO §5.3</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0f1e;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ─── SHOP DATA ────────────────────────────────────────────────────────────────
+const SHOP = {
+  body: [
+    { id:"body_student", emoji:"🧑‍🎓", name:"Student",   price:0,  unlocked:true },
+    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:40 },
+    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:60 },
+    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:100},
+    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:80 },
+    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:50 },
+  ],
+  hat: [
+    { id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0,  unlocked:true },
+    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:15 },
+    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:25 },
+    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:50 },
+    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:35 },
+    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:30 },
+    { id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:20 },
+  ],
+  badge: [
+    { id:"badge_none",   emoji:"",   name:"Geen badge", price:0,  unlocked:true },
+    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:15 },
+    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:40 },
+    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:20 },
+    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:30 },
+    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:25 },
+    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:60 },
+    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:45 },
+  ],
+  bg: [
+    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",          name:"Standaard", price:0,  unlocked:true },
+    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",      price:30 },
+    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",          name:"Ruimte",    price:25 },
+    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",          name:"Natuur",    price:20 },
+    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",      price:20 },
+    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",      price:35 },
+    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog", price:80 },
+  ],
+};
+
+const CAT_LABELS = { body:"🧍 Karakter", hat:"🎩 Hoeden", badge:"🏅 Badges", bg:"🎨 Achtergrond" };
+const DEFAULT_AVATAR = { body:"body_student", hat:"hat_none", badge:"badge_none", bg:"bg_dark" };
+const DEFAULT_OWNED  = ["body_student","hat_none","badge_none","bg_dark"];
+
+// ─── AVATAR ───────────────────────────────────────────────────────────────────
+function AvatarDisplay({ avatar, size=64 }) {
+  const body  = SHOP.body.find(x => x.id===avatar.body)  || SHOP.body[0];
+  const hat   = SHOP.hat.find(x  => x.id===avatar.hat)   || SHOP.hat[0];
+  const badge = SHOP.badge.find(x=> x.id===avatar.badge) || SHOP.badge[0];
+  const bg    = SHOP.bg.find(x   => x.id===avatar.bg)    || SHOP.bg[0];
+  const bodyFs=Math.round(size*.46), hatFs=Math.round(size*.28);
+  const badgeFs=Math.round(size*.24), badgeSz=Math.round(size*.36);
+  return (
+    <div style={{width:size,height:size,borderRadius:16,background:bg.color,
+      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+      position:"relative",flexShrink:0,border:"2px solid rgba(255,255,255,.15)",
+      boxShadow:"0 4px 20px rgba(0,0,0,.4)",overflow:"hidden"}}>
+      <div style={{height:Math.round(size*.28),display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+        <span style={{fontSize:hatFs,lineHeight:1}}>{hat.emoji||" "}</span>
+      </div>
+      <div style={{height:Math.round(size*.52),display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <span style={{fontSize:bodyFs,lineHeight:1}}>{body.emoji}</span>
+      </div>
+      {badge.emoji&&(
+        <div style={{position:"absolute",bottom:4,right:4,width:badgeSz,height:badgeSz,borderRadius:"50%",
+          background:"rgba(0,0,0,.45)",border:"1.5px solid rgba(255,255,255,.25)",
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:badgeFs,lineHeight:1}}>
+          {badge.emoji}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt  = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".",",");
+
+function makeOptions(correct, wrongs) {
+  const unique = [...new Set(wrongs.filter(w=>w!==correct))];
+  const all = [correct,...unique.slice(0,3)];
+  let pad=1; while(all.length<4) all.push(`${pad++}?`);
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  return {options:all, answer:all.indexOf(correct)};
+}
+
+function generateCalcQuestions() {
+  const subjects=[
+    {naam:"een fietser",  snelRef:[3,4,5,6,8,10]},
+    {naam:"een loper",    snelRef:[4,5,6,8,10]},
+    {naam:"een auto",     snelRef:[10,15,20,25,30]},
+    {naam:"een trein",    snelRef:[20,30,40,50]},
+    {naam:"een schaatser",snelRef:[5,6,8,10,12]},
+  ];
+  const stroboSubjects=["speelgoedauto","stuiterende bal","rollende bal","modeltrein"];
+  const qs=[];
+
+  // Q1 v=s/t
+  {const sub=pick(subjects),v=pick(sub.snelRef),t=pick([4,5,6,8,10,12,15,20]),s=v*t;
+   const correct=`${fmt(v)} m/s`;
+   const {options,answer}=makeOptions(correct,[`${fmt(Math.round(s/(t+2)*10)/10)} m/s`,`${fmt(s+t)} m/s`,`${fmt(Math.round(s*t/10)/10)} m/s`]);
+   qs.push({type:"calc",question:`${sub.naam[0].toUpperCase()+sub.naam.slice(1)} legt in ${t} s een afstand af van ${s} m. Bereken de snelheid.`,given:[["s",`${s} m`],["t",`${t} s`]],options,answer,explanation:`v = s ÷ t = ${s} ÷ ${t} = ${fmt(v)} m/s`});}
+
+  // Q2 v=s/t andere getallen
+  {const sub=pick(subjects),v=pick(sub.snelRef),t=pick([3,5,6,8,10,12]),s=v*t;
+   const correct=`${fmt(v)} m/s`;
+   const {options,answer}=makeOptions(correct,[`${fmt(v*2)} m/s`,`${fmt(Math.round(s/(t-1)))} m/s`,`${fmt(v+t)} m/s`]);
+   qs.push({type:"calc",question:`${sub.naam[0].toUpperCase()+sub.naam.slice(1)} rijdt ${s} m in ${t} s. Wat is de snelheid?`,given:[["s",`${s} m`],["t",`${t} s`]],options,answer,explanation:`v = s ÷ t = ${s} ÷ ${t} = ${fmt(v)} m/s`});}
+
+  // Q3 s=v*t
+  {const sub=pick(subjects),v=pick(sub.snelRef),t=pick([5,10,15,20,25,30,60]),s=v*t;
+   const correct=`${s} m`;
+   const {options,answer}=makeOptions(correct,[`${v+t} m`,`${s*2} m`,`${Math.round(s/2)} m`]);
+   qs.push({type:"calc",question:`${sub.naam[0].toUpperCase()+sub.naam.slice(1)} rijdt met ${fmt(v)} m/s. Hoe ver rijdt hij in ${t} s?`,given:[["v",`${fmt(v)} m/s`],["t",`${t} s`]],options,answer,explanation:`s = v × t = ${fmt(v)} × ${t} = ${s} m`});}
+
+  // Q4 t=s/v
+  {const sub=pick(subjects),v=pick([4,5,8,10,20,25]),t=pick([5,10,15,20,25,30]),s=v*t;
+   const correct=`${t} s`;
+   const {options,answer}=makeOptions(correct,[`${t+5} s`,`${s*v} s`,`${Math.round(s/(v+2))} s`]);
+   qs.push({type:"calc",question:`${sub.naam[0].toUpperCase()+sub.naam.slice(1)} rijdt met ${fmt(v)} m/s en legt ${s} m af. Hoe lang duurt dat?`,given:[["v",`${fmt(v)} m/s`],["s",`${s} m`]],options,answer,explanation:`t = s ÷ v = ${s} ÷ ${fmt(v)} = ${t} s`});}
+
+  // Q5 stroboscopisch
+  {const subj=pick(stroboSubjects),flashes=pick([5,6,7,9]),interval=pick([0.1,0.2,0.25,0.5]),gaps=flashes-1,totalT=gaps*interval,v=pick([10,15,20,25,30,40,50,60,80]),dist=Math.round(v*totalT),vExact=dist/totalT,correctStr=`${fmt(vExact)} cm/s`;
+   const {options,answer}=makeOptions(correctStr,[`${fmt(dist/flashes)} cm/s`,`${fmt(Math.round(vExact*2))} cm/s`,`${fmt(Math.round(dist/(totalT+interval)))} cm/s`]);
+   qs.push({type:"strobo",question:`Een stroboscopische foto toont ${flashes} beeldjes van een ${subj}. De tijd tussen twee flitsen is ${fmt(interval)} s. De ${subj} verplaatst in totaal ${dist} cm. Bereken de snelheid.`,stroboData:{flashes,interval,distance:dist,unit:"cm"},options,answer,explanation:`${flashes} beeldjes → ${gaps} tussentijden → t = ${gaps} × ${fmt(interval)} = ${fmt(totalT)} s. v = s ÷ t = ${dist} ÷ ${fmt(totalT)} = ${fmt(vExact)} cm/s`});}
+
+  // Q6 stroboscopisch
+  {const subj=pick(stroboSubjects),flashes=pick([4,5,7,9,11]),interval=pick([0.1,0.2,0.4,0.5]),gaps=flashes-1,totalT=gaps*interval,v=pick([10,15,20,25,30,40,50]),dist=Math.round(v*totalT),vExact=dist/totalT,correctStr=`${fmt(vExact)} cm/s`;
+   const {options,answer}=makeOptions(correctStr,[`${fmt(Math.round(dist/(gaps+1)))} cm/s`,`${fmt(Math.round(vExact*1.5))} cm/s`,`${fmt(Math.round(dist/(totalT+0.5)))} cm/s`]);
+   qs.push({type:"strobo",question:`Een stroboscopische foto toont ${flashes} beeldjes van een ${subj}. Het flitsinterval is ${fmt(interval)} s. De totale verplaatsing is ${dist} cm. Bereken de snelheid.`,stroboData:{flashes,interval,distance:dist,unit:"cm"},options,answer,explanation:`${flashes} beeldjes → ${gaps} tussentijden → t = ${gaps} × ${fmt(interval)} = ${fmt(totalT)} s. v = s ÷ t = ${dist} ÷ ${fmt(totalT)} = ${fmt(vExact)} cm/s`});}
+
+  return qs;
+}
+
+// ─── LEVELS ───────────────────────────────────────────────────────────────────
+const LEVELS = [
+  { id:1, title:"Soort Beweging", icon:"🚴", description:"Herken versneld, eenparig en vertraagd",
+    questions:[
+      {type:"animation",animType:"accelerating",question:"Welk soort beweging zie je hieronder?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:0,explanation:"De afstand tussen de beeldjes wordt steeds groter → de snelheid neemt toe → versnelde beweging."},
+      {type:"animation",animType:"uniform",     question:"Welk soort beweging zie je hieronder?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:1,explanation:"De afstand tussen de beeldjes is steeds gelijk → de snelheid is constant → eenparige beweging."},
+      {type:"animation",animType:"decelerating",question:"Welk soort beweging zie je hieronder?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:2,explanation:"De afstand tussen de beeldjes wordt steeds kleiner → de snelheid neemt af → vertraagde beweging."},
+      {type:"text",question:"Een wielrenner rijdt de finish voorbij en remt af. Welk soort beweging is dit?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:2,explanation:"Bij afremmen neemt de snelheid steeds verder af → vertraagde beweging."},
+      {type:"text",question:"Een auto rijdt met een constante snelheid van 90 km/h over de snelweg. Welk soort beweging is dit?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:1,explanation:"De snelheid blijft constant (90 km/h) → eenparige beweging."},
+      {type:"text",question:"Een raceauto trekt op vanuit stilstand bij een stoplicht. Welk soort beweging is dit?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:0,explanation:"Optrekken vanuit stilstand → de snelheid neemt steeds toe → versnelde beweging."},
+    ]},
+  { id:2, title:"Grafieken Herkennen", icon:"📈", description:"Herken (x,t)- en (v,t)-diagrammen",
+    questions:[
+      {type:"graph",graph:{type:"vt",shape:"horizontal"},question:"Welk soort beweging hoort bij dit (v,t)-diagram?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:1,explanation:"Een horizontale lijn in het (v,t)-diagram → snelheid is constant → eenparige beweging."},
+      {type:"graph",graph:{type:"vt",shape:"rising"},    question:"Welk soort beweging hoort bij dit (v,t)-diagram?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:0,explanation:"Een stijgende lijn in het (v,t)-diagram → snelheid neemt toe → versnelde beweging."},
+      {type:"graph",graph:{type:"vt",shape:"falling"},   question:"Welk soort beweging hoort bij dit (v,t)-diagram?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:2,explanation:"Een dalende lijn in het (v,t)-diagram → snelheid neemt af → vertraagde beweging."},
+      {type:"graph",graph:{type:"xt",shape:"straight"},  question:"Welk soort beweging hoort bij dit (x,t)-diagram?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:1,explanation:"Een rechte lijn in het (x,t)-diagram → positie verandert steeds even snel → eenparige beweging."},
+      {type:"graph",graph:{type:"xt",shape:"concaveUp"}, question:"Welk soort beweging hoort bij dit (x,t)-diagram?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:0,explanation:"Een gebogen lijn die steeds steiler wordt → snelheid neemt toe → versnelde beweging."},
+      {type:"graph",graph:{type:"xt",shape:"concaveDown"},question:"Welk soort beweging hoort bij dit (x,t)-diagram?",options:["Versnelde beweging","Eenparige beweging","Vertraagde beweging"],answer:2,explanation:"Een gebogen lijn die steeds minder steil wordt → snelheid neemt af → vertraagde beweging."},
+    ]},
+  { id:3, title:"Snelheid Berekenen", icon:"🔢", description:"Gebruik v = s / t",
+    questions:[], generate:generateCalcQuestions },
+  { id:4, title:"Grafieken Aflezen", icon:"🤝", description:"Lees ontmoetingspunten af uit (x,t)-diagrammen",
+    questions:[
+      {type:"meeting_read",question:"Persoon A (groen) vertrekt van x = 0, persoon B (roze) van x = 36 m. Ze rijden naar elkaar toe. Lees af: op welk tijdstip ontmoeten ze elkaar?",meetGraph:{aLabel:"Persoon A",bLabel:"Persoon B",aV:3,aStart:0,bV:-3,bStart:36,tMax:10,xMax:38,meetT:6,meetX:18,tStep:2,xStep:6},options:["t = 4 s","t = 6 s","t = 8 s","t = 10 s"],answer:1,explanation:"Het snijpunt van de twee lijnen ligt bij t = 6 s. Je leest dit af op de t-as."},
+      {type:"meeting_read",question:"Dezelfde grafiek. Lees af: op welke positie ontmoeten persoon A en B elkaar?",meetGraph:{aLabel:"Persoon A",bLabel:"Persoon B",aV:3,aStart:0,bV:-3,bStart:36,tMax:10,xMax:38,meetT:6,meetX:18,tStep:2,xStep:6},options:["x = 12 m","x = 16 m","x = 18 m","x = 24 m"],answer:2,explanation:"Het snijpunt ligt bij x = 18 m. Je leest dit af op de x-as."},
+      {type:"meeting_read",question:"Fietser A (groen) vertrekt van x = 0, fietser B (roze) van x = 32 m. Ze rijden naar elkaar toe. Lees af: op welk tijdstip ontmoeten ze elkaar?",meetGraph:{aLabel:"Fietser A",bLabel:"Fietser B",aV:4,aStart:0,bV:-4,bStart:32,tMax:8,xMax:34,meetT:4,meetX:16,tStep:2,xStep:8},options:["t = 2 s","t = 4 s","t = 6 s","t = 8 s"],answer:1,explanation:"Het snijpunt van de twee lijnen ligt bij t = 4 s. Je leest dit af op de t-as."},
+      {type:"meeting_read",question:"Dezelfde grafiek. Lees af: op welke positie ontmoeten fietser A en B elkaar?",meetGraph:{aLabel:"Fietser A",bLabel:"Fietser B",aV:4,aStart:0,bV:-4,bStart:32,tMax:8,xMax:34,meetT:4,meetX:16,tStep:2,xStep:8},options:["x = 8 m","x = 12 m","x = 16 m","x = 24 m"],answer:2,explanation:"Het snijpunt ligt bij x = 16 m. Je leest dit af op de x-as."},
+      {type:"meeting_read",question:"Auto A (groen) rijdt vanuit x = 0. Auto B (roze) rijdt van x = 48 m naar A toe. Lees af: wanneer passeren ze elkaar?",meetGraph:{aLabel:"Auto A",bLabel:"Auto B",aV:3,aStart:0,bV:-3,bStart:48,tMax:12,xMax:50,meetT:8,meetX:24,tStep:2,xStep:8},options:["t = 4 s","t = 6 s","t = 8 s","t = 10 s"],answer:2,explanation:"Het snijpunt ligt bij t = 8 s op de t-as."},
+    ]},
+];
+
+// ─── STROBOSCOPY ──────────────────────────────────────────────────────────────
+function StroboscopyAnim({ type }) {
+  const fromLeft={accelerating:[4,12,24,41,63,88],uniform:[4,20,36,52,68,84],decelerating:[4,22,38,51,61,68]}[type]||[];
+  const W=300,H=70,pad=10,usable=W-2*pad;
+  return (
+    <div style={{background:"linear-gradient(135deg,#1a1a2e,#16213e)",borderRadius:12,padding:"12px 10px 10px",margin:"12px 0",border:"1px solid #0f3460"}}>
+      <div style={{fontSize:10,color:"#64748b",marginBottom:6,fontFamily:"monospace",letterSpacing:1}}>STROBOSCOPISCHE OPNAME — rijrichting →</div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{display:"block"}}>
+        <line x1={pad} y1={38} x2={W-pad} y2={38} stroke="rgba(255,255,255,.1)" strokeWidth="2"/>
+        <polygon points={`${W-pad},38 ${W-pad-8},33 ${W-pad-8},43`} fill="rgba(255,255,255,.18)"/>
+        {fromLeft.map((pct,i)=>{const cx=pad+(pct/100)*usable;return(
+          <g key={i}>
+            <line x1={cx} y1={38} x2={cx} y2={28} stroke="rgba(251,191,36,.35)" strokeWidth="1"/>
+            <circle cx={cx} cy={22} r={7} fill="#1e3a5f" stroke="#60a5fa" strokeWidth="1.8"/>
+            <text x={cx} y={58} textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">t{i}</text>
+          </g>
+        );})}
+      </svg>
+    </div>
+  );
+}
+
+// ─── GRAPH DISPLAY ────────────────────────────────────────────────────────────
+function GraphDisplay({ graph }) {
+  const {type,shape}=graph;
+  const W=220,H=140,PAD=32,w=W-PAD-12,h=H-PAD-12;
+  const path=(()=>{
+    if(type==="vt"){
+      if(shape==="horizontal") return `M${PAD},${PAD+h*.4} L${PAD+w},${PAD+h*.4}`;
+      if(shape==="rising")     return `M${PAD},${PAD+h*.9} L${PAD+w},${PAD+4}`;
+      if(shape==="falling")    return `M${PAD},${PAD+4} L${PAD+w},${PAD+h*.9}`;
+    }
+    if(type==="xt"){
+      if(shape==="straight")    return `M${PAD},${PAD+h} L${PAD+w},${PAD+4}`;
+      if(shape==="concaveUp")   return "M"+Array.from({length:25},(_,i)=>{const t=i/24;return `${PAD+t*w},${PAD+h-t*t*h*.96}`;}).join("L");
+      if(shape==="concaveDown") return "M"+Array.from({length:25},(_,i)=>{const t=i/24;return `${PAD+t*w},${PAD+h-(2*t-t*t)*h*.96}`;}).join("L");
+    }
+    return "";
+  })();
+  return (
+    <div style={{display:"flex",justifyContent:"center",margin:"10px 0"}}>
+      <svg width={W} height={H} style={{background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:10,border:"1px solid #334155"}}>
+        {[.25,.5,.75].map((f,i)=><line key={i} x1={PAD+f*w} y1={10} x2={PAD+f*w} y2={H-PAD+10} stroke="#1e293b" strokeWidth="1" strokeDasharray="2,4"/>)}
+        <line x1={PAD} y1={10} x2={PAD} y2={H-PAD+10} stroke="#475569" strokeWidth="1.5"/>
+        <line x1={PAD} y1={H-PAD+10} x2={W-5} y2={H-PAD+10} stroke="#475569" strokeWidth="1.5"/>
+        <text x={PAD+4} y={18} fill="#94a3b8" fontSize="9" fontFamily="monospace">{type==="vt"?"v (m/s)":"x (m)"}</text>
+        <text x={W-22} y={H-PAD+22} fill="#94a3b8" fontSize="9" fontFamily="monospace">t (s)</text>
+        <path d={path} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"/>
+      </svg>
+    </div>
+  );
+}
+
+// ─── STROBE HELPER ────────────────────────────────────────────────────────────
+function StroboHelper({ data }) {
+  const {flashes,interval,distance,unit}=data;
+  return (
+    <div style={{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.2)",borderRadius:10,padding:12,marginBottom:4}}>
+      <div style={{fontSize:11,color:"#fbbf24",marginBottom:8}}>📷 STROBOSCOPISCHE FOTO — GEGEVENS</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        {[["Aantal beeldjes",flashes],["Interval",`${interval} s`],["Totale afstand",`${distance} ${unit}`]].map(([l,v])=>(
+          <div key={l} style={{background:"rgba(0,0,0,.2)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"#94a3b8",marginBottom:2}}>{l}</div>
+            <div style={{fontSize:15,fontWeight:700,fontFamily:"monospace",color:"#e2e8f0"}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:11,color:"#64748b",marginTop:8}}>💡 Tip: aantal tussentijden = aantal beeldjes − 1</div>
+    </div>
+  );
+}
+
+// ─── MEETING GRAPH ────────────────────────────────────────────────────────────
+function MeetingGraph({ mg }) {
+  const {aV,aStart,bV,bStart,tMax,xMax,tStep,xStep}=mg;
+  const W=290,H=180,PL=42,PB=28,PT=12,PR=12,w=W-PL-PR,h=H-PB-PT;
+  const mT=t=>PL+(t/tMax)*w, mX=x=>PT+h-(x/xMax)*h;
+  const tTicks=Array.from({length:Math.floor(tMax/tStep)+1},(_,i)=>i*tStep).filter(v=>v<=tMax);
+  const xTicks=Array.from({length:Math.floor(xMax/xStep)+1},(_,i)=>i*xStep).filter(v=>v<=xMax);
+  const aEndT=Math.min(tMax,(xMax-aStart)/aV), aEndX=aStart+aV*aEndT;
+  const bEndT=Math.min(tMax,bStart/Math.abs(bV)), bEndX=Math.max(0,bStart+bV*bEndT);
+  return (
+    <div style={{display:"flex",justifyContent:"center",margin:"10px 0"}}>
+      <svg width={W} height={H} style={{background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:12,border:"1px solid #334155"}}>
+        {tTicks.map(t=><g key={t}><line x1={mT(t)} y1={PT} x2={mT(t)} y2={PT+h} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/><text x={mT(t)} y={PT+h+18} fill="#64748b" fontSize="9" textAnchor="middle" fontFamily="monospace">{t}</text></g>)}
+        {xTicks.map(x=><g key={x}><line x1={PL} y1={mX(x)} x2={PL+w} y2={mX(x)} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/><text x={PL-5} y={mX(x)+3} fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">{x}</text></g>)}
+        <line x1={PL} y1={PT-4} x2={PL} y2={PT+h} stroke="#475569" strokeWidth="1.5"/>
+        <line x1={PL} y1={PT+h} x2={PL+w+6} y2={PT+h} stroke="#475569" strokeWidth="1.5"/>
+        <text x={PL-28} y={PT+8} fill="#94a3b8" fontSize="9" fontFamily="monospace">x (m)</text>
+        <text x={PL+w+2} y={PT+h+18} fill="#94a3b8" fontSize="9" fontFamily="monospace">t (s)</text>
+        <line x1={mT(0)} y1={mX(aStart)} x2={mT(aEndT)} y2={mX(aEndX)} stroke="#34d399" strokeWidth="2.5" strokeLinecap="round"/>
+        <line x1={mT(0)} y1={mX(bStart)} x2={mT(bEndT)} y2={mX(bEndX)} stroke="#f472b6" strokeWidth="2.5" strokeLinecap="round"/>
+        <rect x={mT(.2)} y={mX(aStart)-18} width={56} height={14} rx={4} fill="rgba(52,211,153,.15)"/>
+        <text x={mT(.2)+4} y={mX(aStart)-7} fill="#34d399" fontSize="9" fontFamily="monospace">{mg.aLabel}</text>
+        <rect x={mT(.2)} y={mX(bStart)+5} width={56} height={14} rx={4} fill="rgba(244,114,182,.15)"/>
+        <text x={mT(.2)+4} y={mX(bStart)+16} fill="#f472b6" fontSize="9" fontFamily="monospace">{mg.bLabel}</text>
+      </svg>
+    </div>
+  );
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
+const LC=["#f59e0b","#34d399","#60a5fa","#f472b6"];
+const LB=["linear-gradient(135deg,#78350f,#92400e)","linear-gradient(135deg,#064e3b,#065f46)","linear-gradient(135deg,#1e3a8a,#1d4ed8)","linear-gradient(135deg,#831843,#9d174d)"];
+
+function App() {
+  const [screen,setScreen]   = useState("home");
+  const [lvlIdx,setLvlIdx]   = useState(0);
+  const [qIdx,setQIdx]       = useState(0);
+  const [sel,setSel]         = useState(null);
+  const [done,setDone]       = useState(false);
+  const [scores,setScores]   = useState([0,0,0,0]);
+  const [pts,setPts]         = useState(0);
+  const [streak,setStreak]   = useState(0);
+  const [maxStr,setMaxStr]   = useState(0);
+  const [stars,setStars]     = useState([0,0,0,0]);
+  const [shake,setShake]     = useState(false);
+  const [genQuestions,setGenQuestions] = useState(null);
+  const [avatar,setAvatar]   = useState(DEFAULT_AVATAR);
+  const [owned,setOwned]     = useState(DEFAULT_OWNED);
+  const [shopCat,setShopCat] = useState("body");
+  const [buyFlash,setBuyFlash]= useState(null);
+
+  // Load from localStorage
+  useEffect(()=>{
+    try {
+      const raw=localStorage.getItem("beweging_save");
+      if(raw){
+        const d=JSON.parse(raw);
+        if(d.avatar){const av={...DEFAULT_AVATAR,...d.avatar};if(av.face&&!av.badge){av.badge="badge_none";delete av.face;}setAvatar(av);}
+        if(d.owned){const ow=d.owned.filter(id=>!id.startsWith("face_"));if(!ow.includes("badge_none"))ow.push("badge_none");setOwned(ow);}
+        if(d.pts!==undefined) setPts(d.pts);
+      }
+    } catch(e){}
+  },[]);
+
+  const save=(av,ow,p)=>{ try{localStorage.setItem("beweging_save",JSON.stringify({avatar:av,owned:ow,pts:p}));}catch(e){} };
+
+  const addPoints=n=>setPts(p=>{const np=p+n;save(avatar,owned,np);return np;});
+
+  const buyItem=item=>{
+    if(owned.includes(item.id)||pts<item.price) return;
+    const no=[...owned,item.id],np=pts-item.price;
+    setOwned(no);setPts(np);setBuyFlash(item.id);setTimeout(()=>setBuyFlash(null),1200);save(avatar,no,np);
+  };
+  const equipItem=(cat,item)=>{
+    if(!owned.includes(item.id)) return;
+    const na={...avatar,[cat]:item.id};setAvatar(na);save(na,owned,pts);
+  };
+
+  const level=LEVELS[lvlIdx];
+  const questions=(lvlIdx===2&&genQuestions)?genQuestions:level?.questions;
+  const q=questions?.[qIdx], total=questions?.length;
+  const correct=done&&sel===q?.answer;
+  const goHome=()=>{setScreen("home");setSel(null);setDone(false);};
+
+  const handleConfirm=()=>{
+    if(sel===null) return;
+    setDone(true);
+    if(sel===q.answer){
+      const ns=streak+1;setStreak(ns);setMaxStr(s=>Math.max(s,ns));
+      addPoints(10+(ns>2?5:0));
+      setScores(s=>{const n=[...s];n[lvlIdx]++;return n;});
+    } else {setStreak(0);setShake(true);setTimeout(()=>setShake(false),600);}
+  };
+
+  const handleNext=()=>{
+    setSel(null);setDone(false);
+    if(qIdx+1<total){setQIdx(i=>i+1);}
+    else{
+      const pct=scores[lvlIdx]/total;
+      setStars(s=>{const n=[...s];n[lvlIdx]=pct>=.85?3:pct>=.6?2:pct>=.33?1:0;return n;});
+      setScreen("result");
+    }
+  };
+
+  const startLevel=i=>{
+    setLvlIdx(i);setQIdx(0);setSel(null);setDone(false);
+    setScores(s=>{const n=[...s];n[i]=0;return n;});
+    if(i===2) setGenQuestions(LEVELS[2].generate());
+    setScreen("question");
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e)",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9",paddingBottom:40}}>
+      <style>{`
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}60%{transform:translateX(8px)}}
+        @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+        .ch:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)!important;transition:all .2s}
+        .ob:hover{border-color:#fbbf24!important;background:rgba(251,191,36,.08)!important}
+        button{font-family:inherit}
+      `}</style>
+
+      {/* HEADER */}
+      <div style={{background:"rgba(255,255,255,.03)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"9px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          {screen!=="home"&&<button onClick={goHome} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,marginRight:2}}>← Levels</button>}
+          <span style={{fontSize:20}}>🚀</span>
+          <div><div style={{fontWeight:700,fontSize:13}}>BewegingsGame</div><div style={{fontSize:10,color:"#64748b"}}>2 HAVO · §5.3</div></div>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#fbbf24"}}>{pts}</div><div style={{fontSize:10,color:"#64748b"}}>punten</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#f472b6"}}>🔥{streak}</div><div style={{fontSize:10,color:"#64748b"}}>streak</div></div>
+          <button onClick={()=>setScreen("shop")} style={{background:"none",border:"none",cursor:"pointer",padding:2}}><AvatarDisplay avatar={avatar} size={36}/></button>
+        </div>
+      </div>
+
+      <div style={{maxWidth:540,margin:"0 auto",padding:"20px 14px"}}>
+
+        {/* HOME */}
+        {screen==="home"&&(
+          <div style={{animation:"fadeIn .4s ease"}}>
+            <div style={{textAlign:"center",marginBottom:26}}>
+              <div style={{fontSize:44,marginBottom:6}}>🏁</div>
+              <h1 style={{fontSize:23,fontWeight:800,margin:0,background:"linear-gradient(90deg,#fbbf24,#f472b6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Versneld · Eenparig · Vertraagd</h1>
+              <p style={{color:"#94a3b8",marginTop:8,fontSize:13}}>Kies een level en versla alle opdrachten!</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              {LEVELS.map((l,i)=>(
+                <div key={i} className="ch" onClick={()=>startLevel(i)} style={{background:LB[i],borderRadius:16,padding:"17px 13px",cursor:"pointer",border:`1px solid ${LC[i]}40`,transition:"all .2s",position:"relative",overflow:"hidden"}}>
+                  <div style={{fontSize:28,marginBottom:5}}>{l.icon}</div>
+                  <div style={{fontWeight:700,fontSize:14}}>{l.title}</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,.65)",marginTop:3}}>{l.description}</div>
+                  <div style={{marginTop:8,display:"flex",gap:2}}>{[1,2,3].map(s=><span key={s} style={{fontSize:13,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
+                  <div style={{position:"absolute",top:9,right:9,background:"rgba(0,0,0,.3)",borderRadius:7,padding:"2px 7px",fontSize:10,color:LC[i]}}>{i===2?6:l.questions.length} vr.</div>
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:20,background:"rgba(255,255,255,.03)",borderRadius:12,padding:14,border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{fontSize:11,color:"#64748b",marginBottom:8}}>📚 LEERDOELEN</div>
+              {["Herkennen van soorten beweging","Lezen van (x,t)- en (v,t)-diagrammen","Berekenen met v = s / t","Ontmoetingspunten aflezen uit grafiek"].map((d,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0",fontSize:13,color:"#cbd5e1"}}><span style={{color:LC[i]}}>▸</span> {d}</div>
+              ))}
+            </div>
+            <button onClick={()=>setScreen("shop")} className="ch" style={{marginTop:12,width:"100%",padding:"14px 16px",background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",gap:14,transition:"all .2s"}}>
+              <AvatarDisplay avatar={avatar} size={52}/>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontWeight:700,fontSize:14,color:"#f1f5f9"}}>🛍️ Avatar Winkel</div>
+                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Geef je punten uit aan items!</div>
+                <div style={{fontSize:12,color:"#fbbf24",marginTop:2}}>💰 {pts} punten beschikbaar</div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* QUESTION */}
+        {screen==="question"&&q&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{marginBottom:16}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:12,color:"#64748b"}}>
+                <span>{level.icon} {level.title}</span><span>Vraag {qIdx+1} / {total}</span>
+              </div>
+              <div style={{height:5,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${((qIdx+(done?1:0))/total)*100}%`,transition:"width .5s ease"}}/>
+              </div>
+            </div>
+
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:16,padding:16,border:`1px solid ${LC[lvlIdx]}30`,marginBottom:12,animation:shake?"shake .6s ease":"none"}}>
+              <div style={{fontSize:14,fontWeight:600,lineHeight:1.55,marginBottom:10}}>{q.question}</div>
+              {q.type==="animation"&&<StroboscopyAnim type={q.animType}/>}
+              {q.type==="graph"&&<GraphDisplay graph={q.graph}/>}
+              {(q.type==="calc"||q.type==="strobo")&&q.given&&(
+                <div style={{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.2)",borderRadius:10,padding:12,marginBottom:4}}>
+                  <div style={{fontSize:11,color:"#fbbf24",marginBottom:6}}>📋 GEGEVEN</div>
+                  {q.given.map(([k,v])=><div key={k} style={{fontSize:14,fontFamily:"monospace",color:"#e2e8f0"}}>{k} = {v}</div>)}
+                </div>
+              )}
+              {q.type==="strobo"&&<StroboHelper data={q.stroboData}/>}
+              {q.type==="meeting_read"&&<MeetingGraph mg={q.meetGraph}/>}
+            </div>
+
+            <div style={{display:"grid",gap:9,marginBottom:12}}>
+              {q.options.map((opt,i)=>{
+                let bg="rgba(255,255,255,.04)",border="rgba(255,255,255,.1)",col="#e2e8f0";
+                if(sel===i&&!done){bg="rgba(251,191,36,.12)";border="#fbbf24";}
+                if(done){if(i===q.answer){bg="rgba(52,211,153,.12)";border="#34d399";col="#34d399";}else if(i===sel&&i!==q.answer){bg="rgba(239,68,68,.12)";border="#ef4444";col="#ef4444";}}
+                return(
+                  <button key={i} className={!done?"ob":""} onClick={()=>{if(!done)setSel(i);}}
+                    style={{background:bg,border:`1.5px solid ${border}`,borderRadius:12,padding:"12px 14px",color:col,fontSize:14,fontWeight:500,cursor:done?"default":"pointer",textAlign:"left",transition:"all .2s",display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{minWidth:22,height:22,borderRadius:6,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700}}>
+                      {done?(i===q.answer?"✓":i===sel?"✗":String.fromCharCode(65+i)):String.fromCharCode(65+i)}
+                    </span>{opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            {done&&(
+              <div style={{background:correct?"rgba(52,211,153,.08)":"rgba(239,68,68,.08)",border:`1px solid ${correct?"#34d399":"#ef4444"}40`,borderRadius:12,padding:14,marginBottom:12,animation:"popIn .3s ease"}}>
+                <div style={{fontSize:13,fontWeight:600,color:correct?"#34d399":"#f87171",marginBottom:4}}>
+                  {correct?"✅ Goed gedaan!":"❌ Niet helemaal..."}
+                  {correct&&streak>2&&<span style={{marginLeft:8,color:"#fbbf24"}}>🔥 {streak}x streak! +5</span>}
+                </div>
+                <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.6}}>💡 {q.explanation}</div>
+              </div>
+            )}
+
+            {!done?(
+              <button onClick={handleConfirm} disabled={sel===null} style={{width:"100%",padding:14,background:sel!==null?`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`:"rgba(255,255,255,.05)",border:"none",borderRadius:12,color:sel!==null?"#0a0f1e":"#475569",fontWeight:700,fontSize:15,cursor:sel!==null?"pointer":"default",transition:"all .2s"}}>
+                Controleer →
+              </button>
+            ):(
+              <button onClick={handleNext} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+                {qIdx+1<total?"Volgende vraag →":"Resultaat bekijken 🏆"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* RESULT */}
+        {screen==="result"&&(
+          <div style={{animation:"fadeIn .4s ease",textAlign:"center"}}>
+            <div style={{fontSize:52,marginBottom:6}}>{scores[lvlIdx]===total?"🏆":scores[lvlIdx]>=total*.6?"🎉":"💪"}</div>
+            <h2 style={{fontSize:21,fontWeight:800,margin:"0 0 4px"}}>{level.title} — Klaar!</h2>
+            <div style={{fontSize:14,color:"#94a3b8",marginBottom:20}}>{scores[lvlIdx]} van {total} goed beantwoord</div>
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:20}}>
+              {[1,2,3].map(s=><span key={s} style={{fontSize:34,opacity:stars[lvlIdx]>=s?1:.2,animation:stars[lvlIdx]>=s?`popIn .4s ease ${s*.15}s both`:"none"}}>⭐</span>)}
+            </div>
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:14,marginBottom:14,border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                <span style={{fontSize:13,color:"#94a3b8"}}>Score</span>
+                <span style={{fontSize:13,fontWeight:700,color:LC[lvlIdx]}}>{Math.round((scores[lvlIdx]/total)*100)}%</span>
+              </div>
+              <div style={{height:7,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${(scores[lvlIdx]/total)*100}%`,transition:"width 1s ease"}}/>
+              </div>
+            </div>
+            <div style={{background:"rgba(251,191,36,.06)",borderRadius:12,padding:12,marginBottom:14,border:"1px solid rgba(251,191,36,.15)"}}>
+              <div style={{fontSize:13,color:"#fbbf24"}}>🔥 Langste streak: {maxStr}x &nbsp;|&nbsp; 🎯 Totaal: {pts} punten</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+              <button onClick={()=>startLevel(lvlIdx)} style={{padding:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>🔄 Opnieuw</button>
+              <button onClick={goHome} style={{padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,cursor:"pointer",fontSize:14}}>🏠 Levels</button>
+            </div>
+            <button onClick={()=>setScreen("shop")} style={{width:"100%",padding:13,background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
+              <AvatarDisplay avatar={avatar} size={32}/> 🛍️ Naar de winkel
+            </button>
+            {lvlIdx<LEVELS.length-1&&(
+              <button onClick={()=>startLevel(lvlIdx+1)} style={{width:"100%",padding:14,background:LB[lvlIdx+1],border:`1px solid ${LC[lvlIdx+1]}40`,borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14}}>
+                Volgend level: {LEVELS[lvlIdx+1].icon} {LEVELS[lvlIdx+1].title} →
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* SHOP */}
+        {screen==="shop"&&(
+          <div style={{animation:"fadeIn .35s ease"}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:10}}><AvatarDisplay avatar={avatar} size={90}/></div>
+              <div style={{fontSize:18,fontWeight:800}}>Jouw Avatar</div>
+              <div style={{fontSize:13,color:"#94a3b8",marginTop:2}}>💰 {pts} punten beschikbaar</div>
+            </div>
+            <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:4}}>
+              {Object.entries(CAT_LABELS).map(([cat,label])=>(
+                <button key={cat} onClick={()=>setShopCat(cat)} style={{flexShrink:0,padding:"7px 13px",borderRadius:20,border:`1.5px solid ${shopCat===cat?"#60a5fa":"rgba(255,255,255,.1)"}`,background:shopCat===cat?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)",color:shopCat===cat?"#60a5fa":"#94a3b8",fontWeight:600,fontSize:12,cursor:"pointer",transition:"all .15s"}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              {SHOP[shopCat].map(item=>{
+                const isOwned=owned.includes(item.id),isEquipped=avatar[shopCat]===item.id,canAfford=pts>=item.price,justBought=buyFlash===item.id;
+                return(
+                  <div key={item.id} onClick={()=>isOwned?equipItem(shopCat,item):buyItem(item)} className="ch"
+                    style={{background:isEquipped?"rgba(96,165,250,.15)":justBought?"rgba(52,211,153,.15)":"rgba(255,255,255,.04)",
+                      border:`1.5px solid ${isEquipped?"#60a5fa":justBought?"#34d399":isOwned?"rgba(255,255,255,.18)":"rgba(255,255,255,.08)"}`,
+                      borderRadius:14,padding:"14px 12px",cursor:(!isOwned&&!canAfford)?"not-allowed":"pointer",
+                      opacity:(!isOwned&&!canAfford)?.45:1,transition:"all .2s",textAlign:"center",position:"relative"}}>
+                    {shopCat==="bg"
+                      ?<div style={{width:40,height:40,borderRadius:"50%",background:item.color,margin:"0 auto 8px",border:"2px solid rgba(255,255,255,.15)"}}/>
+                      :<div style={{fontSize:34,marginBottom:6,lineHeight:1}}>{item.emoji||"−"}</div>
+                    }
+                    <div style={{fontWeight:600,fontSize:13,color:"#f1f5f9"}}>{item.name}</div>
+                    <div style={{marginTop:5,fontSize:12}}>
+                      {isEquipped?<span style={{color:"#60a5fa",fontWeight:700}}>✓ Aan</span>
+                      :isOwned?<span style={{color:"#34d399",fontSize:11}}>In bezit — klik om aan te doen</span>
+                      :justBought?<span style={{color:"#34d399",fontWeight:700}}>✓ Gekocht!</span>
+                      :<span style={{color:canAfford?"#fbbf24":"#ef4444",fontWeight:600}}>💰 {item.price} punten</span>}
+                    </div>
+                    {isEquipped&&<div style={{position:"absolute",top:8,right:8,width:10,height:10,borderRadius:"50%",background:"#60a5fa"}}/>}
+                  </div>
+                );
+              })}
+            </div>
+            <button onClick={goHome} style={{width:"100%",padding:13,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>
+              ← Terug naar levels
+            </button>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
