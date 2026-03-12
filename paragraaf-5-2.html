@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>§5.2 Gemiddelde snelheid · 2 HAVO</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+  </style>
+</head>
+<body>
+
+<div style="background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 20px;display:flex;align-items:center;justify-content:space-between">
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;color:#94a3b8;font-size:12px;text-decoration:none">← Overzicht</a>
+    <span style="font-size:18px">📏</span>
+    <div>
+      <div style="font-weight:700;font-size:13px">§5.2 · Gemiddelde snelheid</div>
+      <div style="font-size:10px;color:#64748b">2 HAVO · Nova</div>
+    </div>
+  </div>
+  <div style="text-align:center"><div id="hdr-pts" style="font-size:16px;font-weight:700;color:#fbbf24">0</div><div style="font-size:10px;color:#64748b">punten</div></div>
+</div>
+
+<div style="max-width:540px;margin:0 auto;padding:40px 16px;text-align:center;animation:fadeIn .5s ease">
+  <div style="font-size:72px;margin-bottom:16px">🚧</div>
+  <h1 style="font-size:22px;font-weight:800;margin-bottom:8px">In aanbouw</h1>
+  <p style="color:#94a3b8;font-size:14px;line-height:1.7;max-width:380px;margin:0 auto 32px">
+    De oefeningen voor <strong style="color:#34d399">§5.2 Gemiddelde snelheid</strong> worden binnenkort toegevoegd.
+  </p>
+
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:36px;text-align:left">
+    <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">🧮</span>
+      <div><div style="font-weight:600;font-size:13px">Formule v = Δx / Δt</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Berekeningen met snelheid, afstand en tijd</div></div>
+    </div>
+    <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">📊</span>
+      <div><div style="font-weight:600;font-size:13px">Grafieken aflezen</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Gemiddelde snelheid uit (x,t)-diagram bepalen</div></div>
+    </div>
+    <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">🔄</span>
+      <div><div style="font-weight:600;font-size:13px">Eenheden omrekenen</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">km/h ↔ m/s · schattingen maken</div></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:14px;margin-bottom:28px;font-size:13px;color:#fbbf24;animation:pulse 2s ease infinite">
+    ⏳ Komt binnenkort beschikbaar
+  </div>
+
+  <a href="index.html" style="display:inline-block;padding:13px 28px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#e2e8f0;font-weight:600;font-size:14px;text-decoration:none">
+    ← Terug naar overzicht
+  </a>
+</div>
+
+<script>
+try{const save=JSON.parse(localStorage.getItem("beweging_save"))||{};document.getElementById("hdr-pts").textContent=save.pts||0;}catch(e){}
+</script>
+</body>
+</html>

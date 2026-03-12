@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avatar Winkel · H5 Beweging</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+    .card{transition:transform .2s,box-shadow .2s}
+    .card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    button,a{font-family:inherit}
+  </style>
+</head>
+<body>
+
+<div style="background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 20px;display:flex;align-items:center;justify-content:space-between">
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="index.html" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;color:#94a3b8;font-size:12px;text-decoration:none">← Overzicht</a>
+    <span style="font-size:18px">🛍️</span>
+    <div><div style="font-weight:700;font-size:13px">Avatar Winkel</div><div style="font-size:10px;color:#64748b">H5 · Beweging</div></div>
+  </div>
+  <div style="text-align:center"><div id="hdr-pts" style="font-size:16px;font-weight:700;color:#fbbf24">0</div><div style="font-size:10px;color:#64748b">punten</div></div>
+</div>
+
+<div style="max-width:540px;margin:0 auto;padding:20px 14px;animation:fadeIn .4s ease">
+
+  <!-- Avatar preview -->
+  <div style="text-align:center;margin-bottom:22px">
+    <div style="display:flex;justify-content:center;margin-bottom:10px">
+      <div id="avatar-preview" style="width:90px;height:90px;border-radius:16px;background:linear-gradient(160deg,#0f172a,#1e293b);border:2px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative">
+        <div id="av-hat"  style="height:25px;display:flex;align-items:flex-end;justify-content:center;font-size:26px;line-height:1"></div>
+        <div id="av-body" style="height:47px;display:flex;align-items:center;justify-content:center;font-size:42px;line-height:1">🧑‍🎓</div>
+        <div id="av-badge" style="position:absolute;bottom:4px;right:4px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.25);display:none;align-items:center;justify-content:center;font-size:20px;line-height:1"></div>
+      </div>
+    </div>
+    <div style="font-size:18px;font-weight:800">Jouw Avatar</div>
+    <div id="pts-label" style="font-size:13px;color:#94a3b8;margin-top:2px">💰 0 punten beschikbaar</div>
+  </div>
+
+  <!-- Category tabs -->
+  <div id="tabs" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px"></div>
+
+  <!-- Items grid -->
+  <div id="items-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"></div>
+
+  <a href="index.html" style="display:block;width:100%;padding:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#e2e8f0;font-weight:600;font-size:14px;text-align:center;text-decoration:none">
+    ← Terug naar overzicht
+  </a>
+</div>
+
+<script>
+const SHOP = {
+  body:[
+    {id:"body_student",emoji:"🧑‍🎓",name:"Student",   price:0, unlocked:true},
+    {id:"body_ninja",  emoji:"🥷",  name:"Ninja",     price:40},
+    {id:"body_robot",  emoji:"🤖",  name:"Robot",     price:60},
+    {id:"body_astro",  emoji:"👨‍🚀", name:"Astronaut", price:100},
+    {id:"body_alien",  emoji:"👽",  name:"Alien",     price:80},
+    {id:"body_zombie", emoji:"🧟",  name:"Zombie",    price:50},
+  ],
+  hat:[
+    {id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0, unlocked:true},
+    {id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:15},
+    {id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:25},
+    {id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:50},
+    {id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:35},
+    {id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:30},
+    {id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:20},
+  ],
+  badge:[
+    {id:"badge_none",  emoji:"",   name:"Geen badge", price:0, unlocked:true},
+    {id:"badge_star",  emoji:"⭐",  name:"Ster",       price:15},
+    {id:"badge_trophy",emoji:"🏆",  name:"Trofee",     price:40},
+    {id:"badge_bolt",  emoji:"⚡",  name:"Bliksem",    price:20},
+    {id:"badge_medal", emoji:"🏅",  name:"Medaille",   price:30},
+    {id:"badge_fire",  emoji:"🔥",  name:"Vuur",       price:25},
+    {id:"badge_gem",   emoji:"💎",  name:"Diamant",    price:60},
+    {id:"badge_rocket",emoji:"🚀",  name:"Raket",      price:45},
+  ],
+  bg:[
+    {id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",         name:"Standaard",  price:0, unlocked:true},
+    {id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",         name:"Goud",       price:30},
+    {id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",         name:"Ruimte",     price:25},
+    {id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",         name:"Natuur",     price:20},
+    {id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",         name:"Roze",       price:20},
+    {id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",         name:"Vuur",       price:35},
+    {id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)", name:"Regenboog",  price:80},
+  ],
+};
+const CAT_LABELS={body:"🧍 Karakter",hat:"🎩 Hoeden",badge:"🏅 Badges",bg:"🎨 Achtergrond"};
+
+let save={}, currentCat="body";
+
+function loadSave(){
+  try{save=JSON.parse(localStorage.getItem("beweging_save"))||{};}catch(e){save={};}
+  if(!save.avatar) save.avatar={body:"body_student",hat:"hat_none",badge:"badge_none",bg:"bg_dark"};
+  if(!save.owned)  save.owned=["body_student","hat_none","badge_none","bg_dark"];
+  if(!save.pts)    save.pts=0;
+}
+function persist(){ try{localStorage.setItem("beweging_save",JSON.stringify(save));}catch(e){} }
+
+function renderAvatar(){
+  const av=save.avatar;
+  const body =SHOP.body.find(x=>x.id===av.body)||SHOP.body[0];
+  const hat  =SHOP.hat.find(x=>x.id===av.hat)||SHOP.hat[0];
+  const badge=SHOP.badge.find(x=>x.id===av.badge)||SHOP.badge[0];
+  const bg   =SHOP.bg.find(x=>x.id===av.bg)||SHOP.bg[0];
+  document.getElementById("avatar-preview").style.background=bg.color;
+  document.getElementById("av-hat").textContent=hat.emoji;
+  document.getElementById("av-body").textContent=body.emoji;
+  const bdgEl=document.getElementById("av-badge");
+  bdgEl.textContent=badge.emoji;bdgEl.style.display=badge.emoji?"flex":"none";
+  document.getElementById("hdr-pts").textContent=save.pts;
+  document.getElementById("pts-label").textContent="💰 "+save.pts+" punten beschikbaar";
+}
+
+function renderTabs(){
+  const el=document.getElementById("tabs");
+  el.innerHTML=Object.entries(CAT_LABELS).map(([cat,label])=>`
+    <button onclick="switchCat('${cat}')" style="flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid ${currentCat===cat?"#60a5fa":"rgba(255,255,255,.1)"};background:${currentCat===cat?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)"};color:${currentCat===cat?"#60a5fa":"#94a3b8"};font-weight:600;font-size:12px;cursor:pointer">
+      ${label}
+    </button>`).join("");
+}
+
+function renderItems(){
+  const grid=document.getElementById("items-grid");
+  grid.innerHTML=SHOP[currentCat].map(item=>{
+    const isOwned=save.owned.includes(item.id);
+    const isEquipped=save.avatar[currentCat]===item.id;
+    const canAfford=save.pts>=item.price;
+    const border=isEquipped?"#60a5fa":isOwned?"rgba(255,255,255,.18)":"rgba(255,255,255,.08)";
+    const bg=isEquipped?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)";
+    const opacity=(!isOwned&&!canAfford)?.45:1;
+    const cursor=(!isOwned&&!canAfford)?"not-allowed":"pointer";
+    const visual=currentCat==="bg"
+      ?`<div style="width:40px;height:40px;border-radius:50%;background:${item.color};margin:0 auto 8px;border:2px solid rgba(255,255,255,.15)"></div>`
+      :`<div style="font-size:34px;margin-bottom:6px;line-height:1">${item.emoji||"−"}</div>`;
+    const status=isEquipped
+      ?`<span style="color:#60a5fa;font-weight:700">✓ Aan</span>`
+      :isOwned
+        ?`<span style="color:#34d399;font-size:11px">In bezit — klik om aan</span>`
+        :`<span style="color:${canAfford?"#fbbf24":"#ef4444"};font-weight:600">💰 ${item.price} pts</span>`;
+    return `
+      <div class="card" onclick="handleItem('${currentCat}','${item.id}')"
+        style="background:${bg};border:1.5px solid ${border};border-radius:14px;padding:14px 12px;cursor:${cursor};opacity:${opacity};text-align:center;position:relative">
+        ${visual}
+        <div style="font-weight:600;font-size:13px;color:#f1f5f9">${item.name}</div>
+        <div style="margin-top:5px;font-size:12px">${status}</div>
+        ${isEquipped?`<div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:#60a5fa"></div>`:""}
+      </div>`;
+  }).join("");
+}
+
+function handleItem(cat, id){
+  const item=SHOP[cat].find(x=>x.id===id);
+  if(!item) return;
+  if(save.owned.includes(id)){
+    save.avatar[cat]=id; persist(); renderAvatar(); renderItems();
+  } else if(save.pts>=item.price){
+    save.owned.push(id); save.pts-=item.price; save.avatar[cat]=id;
+    persist(); renderAvatar(); renderItems();
+  }
+}
+
+function switchCat(cat){ currentCat=cat; renderTabs(); renderItems(); }
+
+loadSave(); renderAvatar(); renderTabs(); renderItems();
+</script>
+</body>
+</html>
