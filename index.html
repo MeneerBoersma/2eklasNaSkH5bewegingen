@@ -6,16 +6,19 @@
   <title>Hoofdstuk 5 — Beweging · 2 HAVO</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px}
+    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px;transition:background 0.6s ease}
     a{text-decoration:none;color:inherit}
     @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
     @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+    @keyframes devPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.4)}50%{box-shadow:0 0 0 8px rgba(251,191,36,0)}}
     .card{transition:transform .2s,box-shadow .2s;cursor:pointer}
     .card:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.55)}
     .card-locked{opacity:.55;cursor:default}
     .card-locked:hover{transform:none;box-shadow:none}
     button{font-family:inherit}
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+    .star-active{opacity:1!important;filter:drop-shadow(0 0 3px #fbbf24)}
+    .dev-banner{background:linear-gradient(90deg,#78350f,#d97706);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:devPulse 2s infinite}
   </style>
 </head>
 <body>
@@ -26,7 +29,8 @@
     <span style="font-size:22px">⚡</span>
     <div>
       <div style="font-weight:800;font-size:15px">Hoofdstuk 5 · Beweging</div>
-      <div style="font-size:10px;color:#64748b">2 HAVO · Nova Natuurkunde</div>
+      <!-- Verborgen dev-trigger: 5× klikken op versienummer -->
+      <div id="ver-label" style="font-size:10px;color:#64748b;cursor:default;user-select:none">2 HAVO · Nova Natuurkunde</div>
     </div>
   </div>
   <div style="display:flex;gap:14px;align-items:center">
@@ -34,15 +38,20 @@
       <div id="hdr-pts" style="font-size:17px;font-weight:700;color:#fbbf24">0</div>
       <div style="font-size:10px;color:#64748b">punten</div>
     </div>
-    <div id="hdr-avatar" style="width:38px;height:38px;border-radius:10px;background:linear-gradient(160deg,#0f172a,#1e293b);border:2px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative">
-      <div id="hdr-hat"  style="height:11px;display:flex;align-items:flex-end;justify-content:center;font-size:11px;line-height:1"></div>
-      <div id="hdr-body" style="height:20px;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1">🧑‍🎓</div>
-      <div id="hdr-badge" style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;font-size:9px"></div>
-    </div>
+    <div id="hdr-avatar" style="width:38px;height:38px;border-radius:10px;overflow:hidden;flex-shrink:0"></div>
   </div>
 </div>
 
 <div style="max-width:580px;margin:0 auto;padding:28px 16px">
+
+  <!-- DEV BANNER (verborgen, wordt zichtbaar bij dev mode) -->
+  <div id="dev-banner" class="dev-banner" style="display:none">
+    <div>
+      <div style="font-weight:800;font-size:13px">🔧 DEV MODE ACTIEF</div>
+      <div style="font-size:11px;opacity:.85">99.999 punten · alles ontgrendeld</div>
+    </div>
+    <button onclick="handleDevDeactivate()" style="background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);color:#f1f5f9;border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer">Uitzetten</button>
+  </div>
 
   <!-- HERO -->
   <div style="text-align:center;margin-bottom:32px;animation:fadeIn .5s ease">
@@ -62,10 +71,7 @@
           <div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:.5px;margin-bottom:2px">§ 5.1</div>
           <div style="font-weight:800;font-size:16px;margin-bottom:3px">Bewegingen vastleggen</div>
           <div style="font-size:12px;color:rgba(255,255,255,.6)">Stroboscopie · tijdopnamen · afstand aflezen</div>
-          <div id="stars-51" style="margin-top:8px;display:flex;gap:3px">
-            <span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span>
-            <span id="badge-51" style="margin-left:8px;font-size:11px;color:#94a3b8"></span>
-          </div>
+          <div id="stars-51" style="margin-top:8px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"></div>
         </div>
         <div style="font-size:22px;color:rgba(255,255,255,.25)">›</div>
       </div>
@@ -79,10 +85,7 @@
           <div style="font-size:11px;color:#34d399;font-weight:700;letter-spacing:.5px;margin-bottom:2px">§ 5.2</div>
           <div style="font-weight:800;font-size:16px;margin-bottom:3px">Gemiddelde snelheid</div>
           <div style="font-size:12px;color:rgba(255,255,255,.6)">v = Δx / Δt · eenheden · grafiek aflezen</div>
-          <div id="stars-52" style="margin-top:8px;display:flex;gap:3px">
-            <span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span>
-            <span id="badge-52" style="margin-left:8px;font-size:11px;color:#94a3b8"></span>
-          </div>
+          <div id="stars-52" style="margin-top:8px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"></div>
         </div>
         <div style="font-size:22px;color:rgba(255,255,255,.25)">›</div>
       </div>
@@ -97,10 +100,7 @@
           <div style="font-size:11px;color:#60a5fa;font-weight:700;letter-spacing:.5px;margin-bottom:2px">§ 5.3</div>
           <div style="font-weight:800;font-size:16px;margin-bottom:3px">Versneld · Eenparig · Vertraagd</div>
           <div style="font-size:12px;color:rgba(255,255,255,.6)">Soorten beweging · grafieken · v = s/t</div>
-          <div id="stars-53" style="margin-top:8px;display:flex;gap:3px">
-            <span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span>
-            <span id="badge-53" style="margin-left:8px;font-size:11px;color:#94a3b8"></span>
-          </div>
+          <div id="stars-53" style="margin-top:8px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"></div>
         </div>
         <div style="font-size:22px;color:rgba(255,255,255,.4)">›</div>
       </div>
@@ -114,10 +114,7 @@
           <div style="font-size:11px;color:#a78bfa;font-weight:700;letter-spacing:.5px;margin-bottom:2px">§ 5.4</div>
           <div style="font-weight:800;font-size:16px;margin-bottom:3px">Remmen en botsen</div>
           <div style="font-size:12px;color:rgba(255,255,255,.6)">Remweg · reactietijd · botsingen</div>
-          <div id="stars-54" style="margin-top:8px;display:flex;gap:3px">
-            <span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span>
-            <span id="badge-54" style="margin-left:8px;font-size:11px;color:#94a3b8"></span>
-          </div>
+          <div id="stars-54" style="margin-top:8px;display:flex;gap:3px;align-items:center;flex-wrap:wrap"></div>
         </div>
         <div style="font-size:22px;color:rgba(255,255,255,.25)">›</div>
       </div>
@@ -135,7 +132,7 @@
       </div>
       <div>
         <div id="tot-stars" style="font-size:26px;font-weight:800;color:#f472b6">0</div>
-        <div style="font-size:11px;color:#64748b;margin-top:2px">sterren</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px">sterren totaal</div>
       </div>
       <div>
         <div id="tot-para" style="font-size:26px;font-weight:800;color:#34d399">0/4</div>
@@ -147,11 +144,7 @@
   <!-- AVATAR WINKEL KNOP -->
   <a href="winkel.html">
     <div class="card" style="margin-top:14px;background:linear-gradient(135deg,#1e3a5f,#1e293b);border:1px solid rgba(96,165,250,.25);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px">
-      <div id="shop-avatar-preview" style="width:52px;height:52px;border-radius:12px;background:linear-gradient(160deg,#0f172a,#1e293b);border:2px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative;flex-shrink:0">
-        <div id="shop-hat"  style="height:15px;display:flex;align-items:flex-end;justify-content:center;font-size:14px;line-height:1"></div>
-        <div id="shop-body" style="height:27px;display:flex;align-items:center;justify-content:center;font-size:24px;line-height:1">🧑‍🎓</div>
-        <div id="shop-badge" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;font-size:11px"></div>
-      </div>
+      <div id="shop-avatar-preview" style="width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0"></div>
       <div>
         <div style="font-weight:700;font-size:14px;color:#f1f5f9">🛍️ Avatar Winkel</div>
         <div style="font-size:12px;color:#94a3b8;margin-top:2px">Pas je avatar aan met verdiende punten</div>
@@ -161,96 +154,121 @@
     </div>
   </a>
 
+  <!-- DEV CODE INPUT (verborgen, verschijnt na 5 klikken) -->
+  <div id="dev-code-panel" style="display:none;margin-top:16px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:14px 16px">
+    <div style="font-size:12px;color:#fbbf24;font-weight:700;margin-bottom:8px">🔧 Dev-code invoeren</div>
+    <div style="display:flex;gap:8px">
+      <input id="dev-code-input" type="password" placeholder="Voer code in..." style="flex:1;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:13px;font-family:inherit;outline:none"/>
+      <button onclick="handleDevCode()" style="background:#d97706;border:none;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:700">OK</button>
+    </div>
+    <div id="dev-code-msg" style="font-size:11px;color:#94a3b8;margin-top:6px"></div>
+  </div>
+
 </div>
 
+<script src="shop-data.js"></script>
 <script>
-// ── Shared shop data (same as in each paragraph page) ──────────────────────
-const SHOP_BODY =[
-  {id:"body_student",emoji:"🧑‍🎓"},{id:"body_ninja",emoji:"🥷"},{id:"body_robot",emoji:"🤖"},
-  {id:"body_astro",emoji:"👨‍🚀"},{id:"body_alien",emoji:"👽"},{id:"body_zombie",emoji:"🧟"},
-];
-const SHOP_HAT=[
-  {id:"hat_none",emoji:""},{id:"hat_cap",emoji:"🧢"},{id:"hat_mortar",emoji:"🎓"},
-  {id:"hat_crown",emoji:"👑"},{id:"hat_cowboy",emoji:"👒"},{id:"hat_tophat",emoji:"🎩"},{id:"hat_helmet",emoji:"🪖"},
-];
-const SHOP_BADGE=[
-  {id:"badge_none",emoji:""},{id:"badge_star",emoji:"⭐"},{id:"badge_trophy",emoji:"🏆"},
-  {id:"badge_bolt",emoji:"⚡"},{id:"badge_medal",emoji:"🏅"},{id:"badge_fire",emoji:"🔥"},
-  {id:"badge_gem",emoji:"💎"},{id:"badge_rocket",emoji:"🚀"},
-];
-const SHOP_BG=[
-  {id:"bg_dark",color:"linear-gradient(160deg,#0f172a,#1e293b)"},{id:"bg_gold",color:"linear-gradient(160deg,#78350f,#d97706)"},
-  {id:"bg_space",color:"linear-gradient(160deg,#0f172a,#1e3a8a)"},{id:"bg_nature",color:"linear-gradient(160deg,#064e3b,#10b981)"},
-  {id:"bg_pink",color:"linear-gradient(160deg,#831843,#ec4899)"},{id:"bg_fire",color:"linear-gradient(160deg,#7f1d1d,#ef4444)"},
-  {id:"bg_rainbow",color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)"},
-];
-
-function loadSave(){
-  try{return JSON.parse(localStorage.getItem("beweging_save"))||{};}catch(e){return {};}
+// ── Sterren weergeven ──────────────────────────────────────────────────────────
+// Toont alle verdiende sterren (niet beperkt tot 3) + een badge met totaal.
+function renderStars(containerId, starsArr) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var total = starsArr.reduce(function(a,b){return a+b;}, 0);
+  var max   = starsArr.length * 3; // maximaal per level
+  if (total === 0) {
+    container.innerHTML = '<span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span><span style="font-size:14px;opacity:.2">⭐</span>';
+    return;
+  }
+  // Toon elke level-score als mini sterretjes blokje
+  var html = '';
+  starsArr.forEach(function(s, i) {
+    html += '<span style="display:inline-flex;gap:1px;margin-right:4px">';
+    for (var j = 1; j <= 3; j++) {
+      html += '<span style="font-size:12px;' + (j <= s ? 'opacity:1;filter:drop-shadow(0 0 2px #fbbf24)' : 'opacity:.18') + '">⭐</span>';
+    }
+    html += '</span>';
+  });
+  // Totaalteller badge
+  html += '<span style="margin-left:4px;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.35);border-radius:20px;padding:1px 8px;font-size:11px;color:#fbbf24;font-weight:700;white-space:nowrap">'
+        + total + '/' + max + ' ⭐</span>';
+  container.innerHTML = html;
 }
 
-function renderAvatar(save, hatEl, bodyEl, badgeEl, containerEl){
-  const av = save.avatar || {};
-  const body  = SHOP_BODY.find(x=>x.id===av.body)   || SHOP_BODY[0];
-  const hat   = SHOP_HAT.find(x=>x.id===av.hat)     || SHOP_HAT[0];
-  const badge = SHOP_BADGE.find(x=>x.id===av.badge) || SHOP_BADGE[0];
-  const bg    = SHOP_BG.find(x=>x.id===av.bg)       || SHOP_BG[0];
-  if(containerEl) containerEl.style.background = bg.color;
-  if(hatEl)   hatEl.textContent  = hat.emoji;
-  if(bodyEl)  bodyEl.textContent = body.emoji;
-  if(badgeEl){
-    badgeEl.textContent = badge.emoji;
-    badgeEl.style.display = badge.emoji ? "flex" : "none";
+// ── Dev mode ──────────────────────────────────────────────────────────────────
+var devClickCount = 0;
+document.getElementById("ver-label").addEventListener("click", function() {
+  devClickCount++;
+  if (devClickCount >= 5) {
+    devClickCount = 0;
+    document.getElementById("dev-code-panel").style.display = "block";
+    document.getElementById("dev-code-input").focus();
+  }
+});
+
+function handleDevCode() {
+  var input = document.getElementById("dev-code-input").value.trim();
+  var msg   = document.getElementById("dev-code-msg");
+  if (input === DEV_CODE) {
+    activateDevMode();
+    document.getElementById("dev-code-panel").style.display = "none";
+    document.getElementById("dev-code-input").value = "";
+    init(); // herlaad UI
+  } else {
+    msg.textContent = "❌ Ongeldige code.";
+    msg.style.color = "#f87171";
   }
 }
 
-function loadStars(save, paraSlug){
-  // stars saved per paragraph as e.g. save.stars_53 = [2,3,1,0]
-  const arr = save["stars_"+paraSlug] || [];
-  return arr.reduce((a,b)=>a+b,0); // total stars for that para
+function handleDevDeactivate() {
+  deactivateDevMode();
+  init();
 }
 
-window.addEventListener("DOMContentLoaded", ()=>{
-  const save = loadSave();
+// ── Initialisatie ─────────────────────────────────────────────────────────────
+function init() {
+  var save = {};
+  try { save = JSON.parse(localStorage.getItem("beweging_save")) || {}; } catch(e) {}
 
-  // Header avatar
-  renderAvatar(save,
-    document.getElementById("hdr-hat"),
-    document.getElementById("hdr-body"),
-    document.getElementById("hdr-badge"),
-    document.getElementById("hdr-avatar")
-  );
-  // Shop preview avatar
-  renderAvatar(save,
-    document.getElementById("shop-hat"),
-    document.getElementById("shop-body"),
-    document.getElementById("shop-badge"),
-    document.getElementById("shop-avatar-preview")
-  );
+  var av = Object.assign({}, DEFAULT_AVATAR, save.avatar || {});
 
-  const pts = save.pts || 0;
-  document.getElementById("hdr-pts").textContent      = pts;
-  document.getElementById("tot-pts").textContent      = pts;
-  document.getElementById("shop-pts-label").textContent = "💰 "+pts+" punten beschikbaar";
+  // App achtergrond
+  applyAppBackground(av);
 
-  // Stars per paragraph
-  const paraMap = {51:"stars_51",52:"stars_52",53:"stars_53",54:"stars_54"};
-  let totalStars=0, doneParas=0;
-  Object.entries(paraMap).forEach(([slug,key])=>{
-    const arr = save[key] || [];
-    const total = arr.reduce((a,b)=>a+b,0);
-    totalStars += total;
-    if(total>0) doneParas++;
-    const container = document.getElementById("stars-"+slug);
-    if(container){
-      const spans = container.querySelectorAll("span:not([id])");
-      spans.forEach((s,i)=>{ s.style.opacity = (i+1)<=Math.min(total,3)?1:.2; });
-      const badge = document.getElementById("badge-"+slug);
-      if(badge) badge.textContent = total>0 ? total+" ⭐" : "";
-    }
+  // Avatars renderen via shop-data.js
+  document.getElementById("hdr-avatar").innerHTML          = renderAvatarHTML(av, 38);
+  document.getElementById("shop-avatar-preview").innerHTML = renderAvatarHTML(av, 52);
+
+  var pts = save.pts || 0;
+  document.getElementById("hdr-pts").textContent       = pts;
+  document.getElementById("tot-pts").textContent       = pts;
+  document.getElementById("shop-pts-label").textContent = "💰 " + pts + " punten beschikbaar";
+
+  // Dev banner
+  document.getElementById("dev-banner").style.display = save._devMode ? "flex" : "none";
+
+  // Sterren per paragraaf
+  var paraKeys = {51:"stars_51", 52:"stars_52", 53:"stars_53", 54:"stars_54"};
+  var totalStars = 0, doneParas = 0;
+  Object.entries(paraKeys).forEach(function(entry) {
+    var slug = entry[0], key = entry[1];
+    var arr  = save[key] || [];
+    var tot  = arr.reduce(function(a,b){return a+b;}, 0);
+    totalStars += tot;
+    if (tot > 0) doneParas++;
+    renderStars("stars-" + slug, arr.length ? arr : []);
   });
+
   document.getElementById("tot-stars").textContent = totalStars;
-  document.getElementById("tot-para").textContent  = doneParas+"/4";
+  document.getElementById("tot-para").textContent  = doneParas + "/4";
+}
+
+window.addEventListener("DOMContentLoaded", init);
+
+// Enter toets in dev-code veld
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && document.getElementById("dev-code-panel").style.display !== "none") {
+    handleDevCode();
+  }
 });
 </script>
 </body>

@@ -2,69 +2,104 @@
 //  shop-data.js  —  Gedeelde winkeldata voor H5 Beweging
 //
 //  Dit is de ENIGE plek voor:
-//  • Winkelitems (body, hat, badge, bg)
+//  • Winkelitems (body, hat, badge, bg, appbg)
 //  • Avatar-tekenlogica (renderAvatarHTML)
+//  • Ster-vereisten (starReq) per item
 //
 //  Wijzig hier → werkt automatisch in alle paragrafen + winkel.html
 // ═══════════════════════════════════════════════════════════════════
 
+// ─── DEV MODE ────────────────────────────────────────────────────────────────
+// Geheime code: 5× klikken op het versienummer op index.html activeert dev mode.
+const DEV_CODE = "devmode123";
+
 const SHOP = {
   body: [
     { id:"body_student", emoji:"🧑‍🎓", name:"Student",   price:0,   unlocked:true },
-    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:160 },
-    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:240 },
-    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:400 },
-    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:320 },
-    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:200 },
+    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:200 },
+    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:280 },
+    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:380 },
+    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:480, starReq:15 },
+    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:650, starReq:30 },
   ],
   hat: [
     { id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0,  unlocked:true },
-    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:60  },
-    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:100 },
-    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:200 },
-    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:140 },
-    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:120 },
     { id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:80  },
+    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:120 },
+    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:180 },
+    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:240 },
+    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:320, starReq:20 },
+    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:500, starReq:35 },
   ],
   badge: [
     { id:"badge_none",   emoji:"",   name:"Geen badge", price:0,   unlocked:true },
-    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:60  },
-    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:160 },
-    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:80  },
-    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:120 },
-    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:100 },
-    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:240 },
-    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:180 },
+    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:80  },
+    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:140 },
+    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:200 },
+    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:280 },
+    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:360, starReq:18 },
+    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:450, starReq:28 },
+    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:600, starReq:40 },
   ],
   bg: [
-    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",                              name:"Standaard", price:0,   unlocked:true },
-    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",                              name:"Goud",      price:120 },
-    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",                              name:"Ruimte",    price:100 },
-    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",                              name:"Natuur",    price:80  },
-    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",                              name:"Roze",      price:80  },
-    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",                              name:"Vuur",      price:140 },
-    { id:"bg_rainbow", color:"linear-gradient(160deg,#e63946,#f4a261,#e9c46a,#2a9d8f,#457b9d,#9b5de5)", name:"Regenboog", price:320 },
+    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",          name:"Standaard", price:0,   unlocked:true },
+    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",          name:"Ruimte",    price:120  },
+    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",          name:"Natuur",    price:160  },
+    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",      price:200  },
+    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",      price:280  },
+    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",      price:400, starReq:20 },
+    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog", price:550, starReq:30 },
+    { id:"bg_galaxy",  color:"linear-gradient(160deg,#1a0533,#6d28d9,#0e7490)", name:"Melkweg",   price:750, starReq:45 },
+  ],
+  appbg: [
+    { id:"appbg_default",     color:"linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e)", name:"Standaard",       price:0,    unlocked:true },
+    { id:"appbg_green",       color:"linear-gradient(160deg,#022c22,#064e3b 60%,#022c22)", name:"Bosgroen",        price:300  },
+    { id:"appbg_purple",      color:"linear-gradient(160deg,#1e0a3c,#2d1b69 60%,#1e0a3c)", name:"Paars",           price:400  },
+    { id:"appbg_red",         color:"linear-gradient(160deg,#1a0505,#450a0a 60%,#1a0505)", name:"Bloedrood",       price:500, starReq:22 },
+    { id:"appbg_ocean",       color:"linear-gradient(160deg,#001c3d,#0c4a6e 60%,#001c3d)", name:"Oceaan",          price:600, starReq:28 },
+    { id:"appbg_gold",        color:"linear-gradient(160deg,#1c0a00,#44220a 60%,#1c0a00)", name:"Goud",            price:900, starReq:36 },
+    { id:"appbg_rainbow",     color:"linear-gradient(160deg,#12001f,#1e003d,#001533 60%,#001220)", name:"Kosmisch", price:1400, starReq:48 },
+    { id:"appbg_bright_gold", color:"linear-gradient(160deg,#3d2000,#7a4a00,#c4900a 60%,#3d2000)", name:"Gouden Gloed ✨", price:2500, starReq:60 },
   ],
 };
 
-const CAT_LABELS     = { body:"🧍 Karakter", hat:"🎩 Hoeden", badge:"🏅 Badges", bg:"🎨 Achtergrond" };
-const DEFAULT_AVATAR = { body:"body_student", hat:"hat_none", badge:"badge_none", bg:"bg_dark" };
-const DEFAULT_OWNED  = ["body_student","hat_none","badge_none","bg_dark"];
+const CAT_LABELS = {
+  body:  "🧍 Karakter",
+  hat:   "🎩 Hoeden",
+  badge: "🏅 Badges",
+  bg:    "🎨 Avatar achtergrond",
+  appbg: "🖥️ App achtergrond",
+};
 
-// ─── AVATAR HELPERS ───────────────────────────────────────────────────────────
+const DEFAULT_AVATAR = { body:"body_student", hat:"hat_none", badge:"badge_none", bg:"bg_dark", appbg:"appbg_default" };
+const DEFAULT_OWNED  = ["body_student","hat_none","badge_none","bg_dark","appbg_default"];
 
-// Zoekt de volledige item-objecten op voor een gegeven avatar-configuratie.
-// Voeg hier een nieuwe categorie toe als je een nieuwe laag toevoegt aan SHOP.
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
 function resolveAvatar(avatar) {
   return {
     body:  SHOP.body.find(x  => x.id === avatar.body)  || SHOP.body[0],
     hat:   SHOP.hat.find(x   => x.id === avatar.hat)   || SHOP.hat[0],
     badge: SHOP.badge.find(x => x.id === avatar.badge) || SHOP.badge[0],
     bg:    SHOP.bg.find(x    => x.id === avatar.bg)    || SHOP.bg[0],
+    appbg: SHOP.appbg.find(x => x.id === avatar.appbg) || SHOP.appbg[0],
   };
 }
 
-// Geeft een HTML-string terug die de avatar tekent op een gegeven grootte.
+// true als speler genoeg sterren heeft voor dit item
+function meetsStarReq(item, totalStars) {
+  if (!item.starReq) return true;
+  return totalStars >= item.starReq;
+}
+
+// Pas de pagina-achtergrond aan op basis van gekocht appbg-item
+function applyAppBackground(avatar) {
+  var r = resolveAvatar(avatar);
+  document.body.style.background = r.appbg.color;
+  document.body.style.minHeight  = "100vh";
+}
+
+// ─── AVATAR RENDER ────────────────────────────────────────────────────────────
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  Wil je de avatar visueel aanpassen of een laag toevoegen?      ║
 // ║  Pas ALLEEN deze functie aan — werkt dan direct overal.         ║
@@ -72,26 +107,10 @@ function resolveAvatar(avatar) {
 function renderAvatarHTML(avatar, size) {
   size = size || 64;
   var r       = resolveAvatar(avatar);
-  var hatFs   = Math.round(size * .32);
-  var bodyFs  = Math.round(size * .50);
+  var hatFs   = Math.round(size * .28);
+  var bodyFs  = Math.round(size * .46);
   var badgeFs = Math.round(size * .24);
   var badgeSz = Math.round(size * .36);
-
-  // Hoed: absolute bovenaan, gecentreerd, licht overlap met body zodat hij "op het hoofd" zit
-  var hatHTML = '<div style="position:absolute;top:0;left:0;right:0;'
-    + 'display:flex;align-items:flex-start;justify-content:center;'
-    + 'padding-top:' + Math.round(size * .04) + 'px;'
-    + 'font-size:' + hatFs + 'px;line-height:1">'
-    + (r.hat.emoji || '') + '</div>';
-
-  // Body: gecentreerd in de volledige avatar, licht naar onder verschoven zodat hoed er bovenop past
-  var bodyHTML = '<div style="position:absolute;top:0;left:0;right:0;bottom:0;'
-    + 'display:flex;align-items:center;justify-content:center;'
-    + 'padding-top:' + Math.round(size * .12) + 'px;'
-    + 'font-size:' + bodyFs + 'px;line-height:1">'
-    + r.body.emoji + '</div>';
-
-  // Badge: hoek rechtsonder
   var badgeHTML = r.badge.emoji
     ? '<div style="position:absolute;bottom:4px;right:4px;'
         + 'width:' + badgeSz + 'px;height:' + badgeSz + 'px;border-radius:50%;'
@@ -100,15 +119,54 @@ function renderAvatarHTML(avatar, size) {
         + 'font-size:' + badgeFs + 'px;line-height:1">'
         + r.badge.emoji + '</div>'
     : '';
-
   return '<div style="'
-    + 'width:' + size + 'px;height:' + size + 'px;border-radius:16px;'
+    + 'width:'  + size + 'px;height:' + size + 'px;border-radius:16px;'
     + 'background:' + r.bg.color + ';'
+    + 'display:flex;flex-direction:column;align-items:center;justify-content:center;'
     + 'position:relative;flex-shrink:0;'
     + 'border:2px solid rgba(255,255,255,.15);'
     + 'box-shadow:0 4px 20px rgba(0,0,0,.4);overflow:hidden">'
-    + hatHTML
-    + bodyHTML
+    + '<div style="height:' + Math.round(size*.28) + 'px;'
+      + 'display:flex;align-items:flex-end;justify-content:center">'
+      + '<span style="font-size:' + hatFs + 'px;line-height:1">' + (r.hat.emoji || ' ') + '</span>'
+    + '</div>'
+    + '<div style="height:' + Math.round(size*.52) + 'px;'
+      + 'display:flex;align-items:center;justify-content:center">'
+      + '<span style="font-size:' + bodyFs + 'px;line-height:1">' + r.body.emoji + '</span>'
+    + '</div>'
     + badgeHTML
   + '</div>';
+}
+
+// ─── DEV MODE ─────────────────────────────────────────────────────────────────
+function activateDevMode() {
+  try {
+    var allIds = [];
+    Object.values(SHOP).forEach(function(cat) {
+      cat.forEach(function(item) { allIds.push(item.id); });
+    });
+    var prev = JSON.parse(localStorage.getItem("beweging_save")) || {};
+    localStorage.setItem("beweging_save", JSON.stringify(
+      Object.assign({}, prev, { pts:99999, owned:allIds, _devMode:true })
+    ));
+    return true;
+  } catch(e) { return false; }
+}
+
+function deactivateDevMode() {
+  try {
+    var prev = JSON.parse(localStorage.getItem("beweging_save")) || {};
+    delete prev._devMode;
+    prev.pts   = 0;
+    prev.owned = DEFAULT_OWNED.slice();
+    localStorage.setItem("beweging_save", JSON.stringify(prev));
+    return true;
+  } catch(e) { return false; }
+}
+
+function isDevMode() {
+  try {
+    var s = JSON.parse(localStorage.getItem("beweging_save")) || {};
+    return !!s._devMode;
+  } catch(e) { return false; }
 }

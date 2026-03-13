@@ -6,12 +6,16 @@
   <title>Avatar Winkel · H5 Beweging</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px}
+    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px;transition:background 0.6s ease}
     @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
     @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+    @keyframes bought{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
     .card{transition:transform .2s,box-shadow .2s}
     .card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+    .item-bought{animation:bought .3s ease}
     button,a{font-family:inherit}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+    .dev-badge{background:linear-gradient(90deg,#78350f,#d97706);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px;letter-spacing:.3px;vertical-align:middle;margin-left:6px}
   </style>
 </head>
 <body>
@@ -20,17 +24,26 @@
   <div style="display:flex;align-items:center;gap:10px">
     <a href="index.html" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;color:#94a3b8;font-size:12px;text-decoration:none">← Overzicht</a>
     <span style="font-size:18px">🛍️</span>
-    <div><div style="font-weight:700;font-size:13px">Avatar Winkel</div><div style="font-size:10px;color:#64748b">H5 · Beweging</div></div>
+    <div>
+      <div style="font-weight:700;font-size:13px">Avatar Winkel <span id="dev-badge" class="dev-badge" style="display:none">DEV</span></div>
+      <div style="font-size:10px;color:#64748b">H5 · Beweging</div>
+    </div>
   </div>
   <div style="text-align:center"><div id="hdr-pts" style="font-size:16px;font-weight:700;color:#fbbf24">0</div><div style="font-size:10px;color:#64748b">punten</div></div>
 </div>
 
 <div style="max-width:540px;margin:0 auto;padding:20px 14px;animation:fadeIn .4s ease">
 
+  <!-- Sterren info (voor ster-requirements) -->
+  <div id="stars-info" style="display:none;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:9px 14px;margin-bottom:14px;font-size:12px;color:#fbbf24;display:flex;align-items:center;gap:8px">
+    <span style="font-size:16px">⭐</span>
+    <span>Jij hebt <strong id="total-stars-label">0</strong> sterren totaal. Sommige items vereisen een minimum aantal sterren.</span>
+  </div>
+
   <!-- Avatar preview -->
   <div style="text-align:center;margin-bottom:22px">
     <div style="display:flex;justify-content:center;margin-bottom:10px">
-      <div id="avatar-preview"></div>
+      <div id="avatar-preview" style="width:90px;height:90px;border-radius:20px;overflow:hidden;flex-shrink:0"></div>
     </div>
     <div style="font-size:18px;font-weight:800">Jouw Avatar</div>
     <div id="pts-label" style="font-size:13px;color:#94a3b8;margin-top:2px">💰 0 punten beschikbaar</div>
@@ -49,75 +62,136 @@
 
 <script src="shop-data.js"></script>
 <script>
-// SHOP, CAT_LABELS, DEFAULT_AVATAR, DEFAULT_OWNED → geladen via shop-data.js
+var save = {}, currentCat = "body";
+var totalStarsCount = 0;
 
-let save={}, currentCat="body";
+function loadSave() {
+  try { save = JSON.parse(localStorage.getItem("beweging_save")) || {}; } catch(e) { save = {}; }
+  if (!save.avatar) save.avatar = Object.assign({}, DEFAULT_AVATAR);
+  else save.avatar = Object.assign({}, DEFAULT_AVATAR, save.avatar);
+  if (!save.owned)  save.owned  = DEFAULT_OWNED.slice();
+  if (!save.pts)    save.pts    = 0;
 
-function loadSave(){
-  try{save=JSON.parse(localStorage.getItem("beweging_save"))||{};}catch(e){save={};}
-  if(!save.avatar) save.avatar={...DEFAULT_AVATAR};
-  if(!save.owned)  save.owned=[...DEFAULT_OWNED];
-  if(!save.pts)    save.pts=0;
+  // Bereken totale sterren
+  totalStarsCount = 0;
+  ["stars_51","stars_52","stars_53","stars_54"].forEach(function(k) {
+    var arr = save[k] || [];
+    totalStarsCount += arr.reduce(function(a,b){return a+b;}, 0);
+  });
 }
-function persist(){ try{localStorage.setItem("beweging_save",JSON.stringify(save));}catch(e){} }
 
-function renderAvatar(){
+function persist() {
+  try { localStorage.setItem("beweging_save", JSON.stringify(save)); } catch(e) {}
+}
+
+function renderAvatar() {
   document.getElementById("avatar-preview").innerHTML = renderAvatarHTML(save.avatar, 90);
-  document.getElementById("hdr-pts").textContent = save.pts;
+  applyAppBackground(save.avatar);
+  document.getElementById("hdr-pts").textContent  = save.pts;
   document.getElementById("pts-label").textContent = "💰 " + save.pts + " punten beschikbaar";
+
+  var devBadge = document.getElementById("dev-badge");
+  devBadge.style.display = save._devMode ? "inline" : "none";
 }
 
-function renderTabs(){
-  const el=document.getElementById("tabs");
-  el.innerHTML=Object.entries(CAT_LABELS).map(([cat,label])=>`
-    <button onclick="switchCat('${cat}')" style="flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid ${currentCat===cat?"#60a5fa":"rgba(255,255,255,.1)"};background:${currentCat===cat?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)"};color:${currentCat===cat?"#60a5fa":"#94a3b8"};font-weight:600;font-size:12px;cursor:pointer">
-      ${label}
-    </button>`).join("");
-}
-
-function renderItems(){
-  const grid=document.getElementById("items-grid");
-  grid.innerHTML=SHOP[currentCat].map(item=>{
-    const isOwned=save.owned.includes(item.id);
-    const isEquipped=save.avatar[currentCat]===item.id;
-    const canAfford=save.pts>=item.price;
-    const border=isEquipped?"#60a5fa":isOwned?"rgba(255,255,255,.18)":"rgba(255,255,255,.08)";
-    const bg=isEquipped?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)";
-    const opacity=(!isOwned&&!canAfford)?.45:1;
-    const cursor=(!isOwned&&!canAfford)?"not-allowed":"pointer";
-    const visual=currentCat==="bg"
-      ?`<div style="width:40px;height:40px;border-radius:50%;background:${item.color};margin:0 auto 8px;border:2px solid rgba(255,255,255,.15)"></div>`
-      :`<div style="font-size:34px;margin-bottom:6px;line-height:1">${item.emoji||"−"}</div>`;
-    const status=isEquipped
-      ?`<span style="color:#60a5fa;font-weight:700">✓ Aan</span>`
-      :isOwned
-        ?`<span style="color:#34d399;font-size:11px">In bezit — klik om aan</span>`
-        :`<span style="color:${canAfford?"#fbbf24":"#ef4444"};font-weight:600">💰 ${item.price} pts</span>`;
-    return `
-      <div class="card" onclick="handleItem('${currentCat}','${item.id}')"
-        style="background:${bg};border:1.5px solid ${border};border-radius:14px;padding:14px 12px;cursor:${cursor};opacity:${opacity};text-align:center;position:relative">
-        ${visual}
-        <div style="font-weight:600;font-size:13px;color:#f1f5f9">${item.name}</div>
-        <div style="margin-top:5px;font-size:12px">${status}</div>
-        ${isEquipped?`<div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:#60a5fa"></div>`:""}
-      </div>`;
+function renderTabs() {
+  var el = document.getElementById("tabs");
+  el.innerHTML = Object.entries(CAT_LABELS).map(function(entry) {
+    var cat = entry[0], label = entry[1];
+    var active = currentCat === cat;
+    return '<button onclick="switchCat(\'' + cat + '\')" style="flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid ' + (active ? "#60a5fa" : "rgba(255,255,255,.1)") + ';background:' + (active ? "rgba(96,165,250,.15)" : "rgba(255,255,255,.04)") + ';color:' + (active ? "#60a5fa" : "#94a3b8") + ';font-weight:600;font-size:12px;cursor:pointer">' + label + '</button>';
   }).join("");
 }
 
-function handleItem(cat, id){
-  const item=SHOP[cat].find(x=>x.id===id);
-  if(!item) return;
-  if(save.owned.includes(id)){
-    save.avatar[cat]=id; persist(); renderAvatar(); renderItems();
-  } else if(save.pts>=item.price){
-    save.owned.push(id); save.pts-=item.price; save.avatar[cat]=id;
+function renderItems() {
+  var grid = document.getElementById("items-grid");
+  var items = SHOP[currentCat] || [];
+  grid.innerHTML = items.map(function(item) {
+    var isOwned    = save.owned.includes(item.id);
+    var isEquipped = save.avatar[currentCat] === item.id;
+    var canAfford  = save.pts >= item.price;
+    var hasStars   = meetsStarReq(item, totalStarsCount);
+
+    var lockedByStars = !isOwned && !hasStars;
+    var lockedByPts   = !isOwned && hasStars && !canAfford;
+    var canBuy        = !isOwned && hasStars && canAfford;
+
+    var border  = isEquipped ? "#60a5fa" : isOwned ? "rgba(255,255,255,.18)" : "rgba(255,255,255,.08)";
+    var bgColor = isEquipped ? "rgba(96,165,250,.15)" : "rgba(255,255,255,.04)";
+    var opacity = (lockedByStars || lockedByPts) ? .45 : 1;
+    var cursor  = (lockedByStars || lockedByPts) ? "not-allowed" : "pointer";
+
+    // Visuele weergave
+    var visual;
+    if (currentCat === "bg") {
+      visual = '<div style="width:44px;height:44px;border-radius:50%;background:' + item.color + ';margin:0 auto 8px;border:2px solid rgba(255,255,255,.15)"></div>';
+    } else if (currentCat === "appbg") {
+      visual = '<div style="width:44px;height:32px;border-radius:8px;background:' + item.color + ';margin:0 auto 8px;border:2px solid rgba(255,255,255,.15);position:relative">'
+             + '<div style="position:absolute;inset:3px;border-radius:5px;background:rgba(255,255,255,.08)"></div>'
+             + '</div>';
+    } else {
+      visual = '<div style="font-size:34px;margin-bottom:6px;line-height:1">' + (item.emoji || "−") + '</div>';
+    }
+
+    // Status label
+    var status;
+    if (isEquipped) {
+      status = '<span style="color:#60a5fa;font-weight:700">✓ Aan</span>';
+    } else if (isOwned) {
+      status = '<span style="color:#34d399;font-size:11px">In bezit · klik om aan</span>';
+    } else if (lockedByStars) {
+      status = '<span style="color:#f59e0b;font-size:11px">🔒 ' + item.starReq + ' ⭐ nodig</span>';
+    } else if (lockedByPts) {
+      status = '<span style="color:#ef4444;font-weight:600">💰 ' + item.price + ' pts</span>';
+    } else {
+      status = '<span style="color:#fbbf24;font-weight:600">💰 ' + item.price + ' pts</span>';
+    }
+
+    // Ster-eis banner
+    var starBanner = (item.starReq && !isOwned)
+      ? '<div style="position:absolute;top:7px;left:7px;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:1px 7px;font-size:10px;color:#fbbf24;font-weight:700">' + item.starReq + ' ⭐</div>'
+      : '';
+
+    return '<div class="card" onclick="handleItem(\'' + currentCat + '\',\'' + item.id + '\')"'
+         + ' style="background:' + bgColor + ';border:1.5px solid ' + border + ';border-radius:14px;padding:14px 12px;cursor:' + cursor + ';opacity:' + opacity + ';text-align:center;position:relative">'
+         + starBanner
+         + visual
+         + '<div style="font-weight:600;font-size:13px;color:#f1f5f9">' + item.name + '</div>'
+         + '<div style="margin-top:5px;font-size:12px">' + status + '</div>'
+         + (isEquipped ? '<div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:#60a5fa"></div>' : '')
+         + '</div>';
+  }).join("");
+}
+
+function handleItem(cat, id) {
+  var item = (SHOP[cat] || []).find(function(x){ return x.id === id; });
+  if (!item) return;
+  if (save.owned.includes(id)) {
+    save.avatar[cat] = id;
+    persist(); renderAvatar(); renderItems();
+  } else if (meetsStarReq(item, totalStarsCount) && save.pts >= item.price) {
+    save.owned.push(id);
+    save.pts -= item.price;
+    save.avatar[cat] = id;
     persist(); renderAvatar(); renderItems();
   }
 }
 
-function switchCat(cat){ currentCat=cat; renderTabs(); renderItems(); }
+function switchCat(cat) { currentCat = cat; renderTabs(); renderItems(); }
 
-loadSave(); renderAvatar(); renderTabs(); renderItems();
+// Sterren info balk
+function updateStarsInfo() {
+  var el = document.getElementById("stars-info");
+  var lbl = document.getElementById("total-stars-label");
+  if (lbl) lbl.textContent = totalStarsCount;
+  if (el)  el.style.display = "flex";
+}
+
+loadSave();
+renderAvatar();
+renderTabs();
+renderItems();
+updateStarsInfo();
 </script>
 </body>
 </html>
