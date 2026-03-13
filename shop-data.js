@@ -38,7 +38,7 @@ const SHOP = {
     { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",       price:200  },
     { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",       price:280  },
     { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",       price:400,  starReq:20 },
-    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog",  price:550,  starReq:30 },
+    { id:"bg_rainbow", color:"linear-gradient(160deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)", name:"Regenboog", price:550, starReq:30 },
     { id:"bg_galaxy",  color:"linear-gradient(160deg,#1a0533,#6d28d9,#0e7490)", name:"Melkweg",    price:750,  starReq:45 },
   ],
   appbg: [
