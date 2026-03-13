@@ -3,61 +3,581 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>§5.4 Remmen en botsen · 2 HAVO</title>
+  <title>§5.4 Remmen en Botsen · 2 HAVO</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-    @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+    body{background:#0a0f1e;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
   </style>
 </head>
 <body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
 
-<div style="background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 20px;display:flex;align-items:center;justify-content:space-between">
-  <div style="display:flex;align-items:center;gap:10px">
-    <a href="index.html" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;color:#94a3b8;font-size:12px;text-decoration:none">← Overzicht</a>
-    <span style="font-size:18px">🛑</span>
-    <div>
-      <div style="font-weight:700;font-size:13px">§5.4 · Remmen en botsen</div>
-      <div style="font-size:10px;color:#64748b">2 HAVO · Nova</div>
+const SHOP = {
+  body: [
+    { id:"body_student", emoji:"🧑‍🎓", name:"Student",   price:0,  unlocked:true },
+    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:80  },
+    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:120 },
+    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:200 },
+    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:160 },
+    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:100 },
+  ],
+  hat: [
+    { id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0,  unlocked:true },
+    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:30  },
+    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:50  },
+    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:100 },
+    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:70  },
+    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:60  },
+    { id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:40  },
+  ],
+  badge: [
+    { id:"badge_none",   emoji:"",   name:"Geen badge", price:0,   unlocked:true },
+    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:30  },
+    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:80  },
+    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:40  },
+    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:60  },
+    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:50  },
+    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:120 },
+    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:90  },
+  ],
+  bg: [
+    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",          name:"Standaard", price:0,   unlocked:true },
+    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",      price:60  },
+    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",          name:"Ruimte",    price:50  },
+    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",          name:"Natuur",    price:40  },
+    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",      price:40  },
+    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",      price:70  },
+    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog", price:160 },
+  ],
+};
+
+const CAT_LABELS = { body:"🧍 Karakter", hat:"🎩 Hoeden", badge:"🏅 Badges", bg:"🎨 Achtergrond" };
+const DEFAULT_AVATAR = { body:"body_student", hat:"hat_none", badge:"badge_none", bg:"bg_dark" };
+const DEFAULT_OWNED  = ["body_student","hat_none","badge_none","bg_dark"];
+
+function AvatarDisplay({ avatar, size=64 }) {
+  const body  = SHOP.body.find(x => x.id===avatar.body)  || SHOP.body[0];
+  const hat   = SHOP.hat.find(x  => x.id===avatar.hat)   || SHOP.hat[0];
+  const badge = SHOP.badge.find(x=> x.id===avatar.badge) || SHOP.badge[0];
+  const bg    = SHOP.bg.find(x   => x.id===avatar.bg)    || SHOP.bg[0];
+  const bodyFs=Math.round(size*.46), hatFs=Math.round(size*.28);
+  const badgeFs=Math.round(size*.24), badgeSz=Math.round(size*.36);
+  return (
+    <div style={{width:size,height:size,borderRadius:16,background:bg.color,
+      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+      position:"relative",flexShrink:0,border:"2px solid rgba(255,255,255,.15)",
+      boxShadow:"0 4px 20px rgba(0,0,0,.4)",overflow:"hidden"}}>
+      <div style={{height:Math.round(size*.28),display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+        <span style={{fontSize:hatFs,lineHeight:1}}>{hat.emoji||" "}</span>
+      </div>
+      <div style={{height:Math.round(size*.52),display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <span style={{fontSize:bodyFs,lineHeight:1}}>{body.emoji}</span>
+      </div>
+      {badge.emoji&&(
+        <div style={{position:"absolute",bottom:4,right:4,width:badgeSz,height:badgeSz,borderRadius:"50%",
+          background:"rgba(0,0,0,.45)",border:"1.5px solid rgba(255,255,255,.25)",
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:badgeFs,lineHeight:1}}>
+          {badge.emoji}
+        </div>
+      )}
     </div>
-  </div>
-  <div style="text-align:center"><div id="hdr-pts" style="font-size:16px;font-weight:700;color:#fbbf24">0</div><div style="font-size:10px;color:#64748b">punten</div></div>
-</div>
+  );
+}
 
-<div style="max-width:540px;margin:0 auto;padding:40px 16px;text-align:center;animation:fadeIn .5s ease">
-  <div style="font-size:72px;margin-bottom:16px">🚧</div>
-  <h1 style="font-size:22px;font-weight:800;margin-bottom:8px">In aanbouw</h1>
-  <p style="color:#94a3b8;font-size:14px;line-height:1.7;max-width:380px;margin:0 auto 32px">
-    De oefeningen voor <strong style="color:#a78bfa">§5.4 Remmen en botsen</strong> worden binnenkort toegevoegd.
-  </p>
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt  = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".",",");
 
-  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:36px;text-align:left">
-    <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:20px">⏱️</span>
-      <div><div style="font-weight:600;font-size:13px">Reactietijd</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Reactieweg berekenen · invloed op remafstand</div></div>
+function makeOptions(correct, wrongs) {
+  const unique = [...new Set(wrongs.filter(w=>w!==correct))];
+  const all = [correct,...unique.slice(0,3)];
+  let pad=1; while(all.length<4) all.push(`${pad++}?`);
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  return {options:all, answer:all.indexOf(correct)};
+}
+
+// Remweg grafiek (v² / 160 benadert de echte waarden: 40→10, 80→40, 120→90)
+function RemwegGrafiek({ showPoint }) {
+  const W=284, H=160, PL=44, PB=28, PT=10, PR=12;
+  const w=W-PL-PR, h=H-PB-PT;
+  const remweg=v=>Math.round(v*v/160);
+  const vMax=130, sMax=100;
+  const mx=v=>PL+(v/vMax)*w;
+  const my=s=>PT+h-(s/sMax)*h;
+  const pathData="M"+[0,20,40,60,80,100,120].map(v=>`${mx(v).toFixed(1)},${my(remweg(v)).toFixed(1)}`).join("L");
+  return (
+    <div style={{display:"flex",justifyContent:"center",margin:"10px 0"}}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:12,border:"1px solid #334155",display:"block"}}>
+        {[20,40,60,80,100].map(s=>(
+          <g key={s}>
+            <line x1={PL} y1={my(s)} x2={PL+w} y2={my(s)} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/>
+            <text x={PL-4} y={my(s)+3} fill="#64748b" fontSize="8" textAnchor="end" fontFamily="monospace">{s}</text>
+          </g>
+        ))}
+        {[0,40,80,120].map(v=>(
+          <g key={v}>
+            <line x1={mx(v)} y1={PT} x2={mx(v)} y2={PT+h} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/>
+            <text x={mx(v)} y={PT+h+16} fill="#64748b" fontSize="8" textAnchor="middle" fontFamily="monospace">{v}</text>
+          </g>
+        ))}
+        <line x1={PL} y1={PT} x2={PL} y2={PT+h} stroke="#475569" strokeWidth="1.5"/>
+        <line x1={PL} y1={PT+h} x2={PL+w+4} y2={PT+h} stroke="#475569" strokeWidth="1.5"/>
+        <text x={PL+4} y={PT+10} fill="#94a3b8" fontSize="7" fontFamily="monospace">s (m)</text>
+        <text x={PL+w/2} y={H-4} fill="#94a3b8" fontSize="7" fontFamily="monospace" textAnchor="middle">v (km/h)</text>
+        <path d={pathData} fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+        {showPoint&&(()=>{
+          const {v,s}=showPoint;
+          return (<>
+            <line x1={mx(v)} y1={my(s)} x2={mx(v)} y2={PT+h} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="3,3"/>
+            <line x1={PL} y1={my(s)} x2={mx(v)} y2={my(s)} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="3,3"/>
+            <circle cx={mx(v)} cy={my(s)} r={4} fill="#ef4444"/>
+            <text x={mx(v)+5} y={my(s)-4} fill="#ef4444" fontSize="8" fontFamily="monospace">{v} km/h → {s} m</text>
+          </>);
+        })()}
+      </svg>
     </div>
-    <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:20px">🛑</span>
-      <div><div style="font-weight:600;font-size:13px">Remweg en stopafstand</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Stopafstand = reactieweg + remweg</div></div>
+  );
+}
+
+function StopafstandBar({ reactieAfstand, remweg }) {
+  const total = reactieAfstand + remweg;
+  return (
+    <div style={{background:"rgba(96,165,250,.07)",border:"1px solid rgba(96,165,250,.2)",borderRadius:10,padding:12,marginBottom:8}}>
+      <div style={{fontSize:11,color:"#60a5fa",marginBottom:8}}>🚗 stopafstand = reactie-afstand + remweg</div>
+      <div style={{display:"flex",borderRadius:8,overflow:"hidden",height:28,marginBottom:8}}>
+        <div style={{flex:reactieAfstand,background:"rgba(251,191,36,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#fde68a"}}>{reactieAfstand} m</div>
+        <div style={{flex:remweg,background:"rgba(239,68,68,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#fca5a5"}}>{remweg} m</div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}>
+        <span style={{color:"#fbbf24"}}>↑ reactie-afstand</span>
+        <span style={{color:"#ef4444"}}>↑ remweg</span>
+        <span style={{color:"#e2e8f0",fontWeight:700}}>= {total} m totaal</span>
+      </div>
     </div>
-    <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:20px">💥</span>
-      <div><div style="font-weight:600;font-size:13px">Botsingen</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Veiligheidsmaatregelen · impactanalyse</div></div>
+  );
+}
+
+function generateRemwegQuestions() {
+  const qs = [];
+
+  // 1. n²-regel remweg
+  const refPairs=[
+    {v1:40,s1:10,v2:80, n:2, s2:40},
+    {v1:40,s1:10,v2:120,n:3, s2:90},
+    {v1:40,s1:10,v2:160,n:4, s2:160},
+    {v1:60,s1:22,v2:120,n:2, s2:88},
+  ];
+  const rp=pick(refPairs);
+  {const {v1,s1,v2,n,s2}=rp;
+   const correct=`${s2} m`;
+   const {options,answer}=makeOptions(correct,[`${s2/n} m`,`${s2*n} m`,`${s1*n} m`]);
+   qs.push({type:"calc",question:`Bij ${v1} km/h is de remweg ${s1} m. Hoe lang is de remweg bij ${v2} km/h? (Zelfde auto, zelfde remkracht)`,given:[["v₁",`${v1} km/h`],["s₁",`${s1} m`],["v₂",`${v2} km/h`]],options,answer,
+     explanation:`v₂ is ${n}× zo groot → remweg is ${n}² = ${n*n}× zo lang → s₂ = ${n*n} × ${s1} = ${s2} m`});}
+
+  // 2. Omrekenen km/h → m/s
+  const kpairs=[[36,10],[54,15],[72,20],[90,25],[108,30]];
+  const [kmh,ms]=pick(kpairs);
+  {const correct=`${ms} m/s`;
+   const {options,answer}=makeOptions(correct,[`${ms+3} m/s`,`${Math.round(kmh/3)} m/s`,`${ms-2} m/s`]);
+   qs.push({type:"calc",question:`Reken ${kmh} km/h om naar m/s.`,given:[["v",`${kmh} km/h`],["tip","÷ 3,6"]],options,answer,
+     explanation:`v = ${kmh} ÷ 3,6 = ${ms} m/s`});}
+
+  // 3. Reactie-afstand
+  const rScen=[
+    {naam:"Sem",  v_ms:15,t:0.8,sr:12},
+    {naam:"Lena", v_ms:20,t:0.9,sr:18},
+    {naam:"Karin",v_ms:25,t:0.8,sr:20},
+    {naam:"Daan", v_ms:10,t:0.7,sr:7},
+    {naam:"Floor",v_ms:30,t:1.0,sr:30},
+  ];
+  const rs=pick(rScen);
+  {const correct=`${rs.sr} m`;
+   const {options,answer}=makeOptions(correct,[`${rs.sr+5} m`,`${Math.round(rs.sr/2)} m`,`${rs.v_ms+rs.t} m`]);
+   qs.push({type:"calc",question:`${rs.naam} rijdt ${rs.v_ms} m/s. Reactietijd = ${fmt(rs.t)} s. Bereken de reactie-afstand.`,given:[["v",`${rs.v_ms} m/s`],["t",`${fmt(rs.t)} s`]],options,answer,
+     explanation:`s = v × t = ${rs.v_ms} × ${fmt(rs.t)} = ${rs.sr} m`});}
+
+  // 4. Stopafstand
+  const sScen=[
+    {naam:"Thomas",v_ms:12.5,t:0.8,sr:10,rem:12,stop:22},
+    {naam:"Maya",  v_ms:20,  t:0.9,sr:18,rem:32,stop:50},
+    {naam:"Bas",   v_ms:15,  t:1.0,sr:15,rem:18,stop:33},
+    {naam:"Zara",  v_ms:25,  t:0.8,sr:20,rem:50,stop:70},
+  ];
+  const ss=pick(sScen);
+  {const correct=`${ss.stop} m`;
+   const {options,answer}=makeOptions(correct,[`${ss.rem} m`,`${ss.sr} m`,`${ss.stop+8} m`]);
+   qs.push({type:"stopafstand",question:`${ss.naam} rijdt ${ss.v_ms} m/s. Reactietijd: ${fmt(ss.t)} s. Remweg: ${ss.rem} m. Bereken de stopafstand.`,
+     given:[["v",`${ss.v_ms} m/s`],["t_reactie",`${fmt(ss.t)} s`],["remweg",`${ss.rem} m`]],
+     stopData:{reactieAfstand:ss.sr,remweg:ss.rem},
+     options,answer,
+     explanation:`Reactie-afstand = ${ss.v_ms} × ${fmt(ss.t)} = ${ss.sr} m. Stopafstand = ${ss.sr} + ${ss.rem} = ${ss.stop} m`});}
+
+  // 5. n²-factor abstract
+  {const factorOpts=[[2,4],[3,9],[4,16]];
+   const [n,n2]=pick(factorOpts);
+   const correct=`${n2}× zo lang`;
+   const {options,answer}=makeOptions(correct,[`${n}× zo lang`,`${n2+n}× zo lang`,`${n+1}× zo lang`]);
+   qs.push({type:"text",question:`De snelheid van een auto wordt ${n}× zo groot. Hoe verandert de remweg?`,options,answer,
+     explanation:`Als de snelheid n× zo groot wordt, wordt de remweg n² zo lang: ${n}² = ${n2}. De remweg wordt ${n2}× zo lang.`});}
+
+  // 6. Tweede stopafstand
+  {const v2=pick([10,12,15,20]), t2=pick([0.7,0.8,0.9,1.0]);
+   const sr2=Math.round(v2*t2*10)/10;
+   const rem2=pick([10,15,20,25,30]);
+   const stop2=Math.round((sr2+rem2)*10)/10;
+   const correct=`${fmt(stop2)} m`;
+   const {options,answer}=makeOptions(correct,[`${rem2} m`,`${fmt(sr2)} m`,`${fmt(stop2+5)} m`]);
+   qs.push({type:"stopafstand",question:`Een bestuurder rijdt ${v2} m/s. Reactietijd: ${fmt(t2)} s. Remweg: ${rem2} m. Wat is de stopafstand?`,
+     given:[["v",`${v2} m/s`],["t_reactie",`${fmt(t2)} s`],["remweg",`${rem2} m`]],
+     stopData:{reactieAfstand:sr2,remweg:rem2},
+     options,answer,
+     explanation:`Reactie-afstand = ${v2} × ${fmt(t2)} = ${fmt(sr2)} m. Stopafstand = ${fmt(sr2)} + ${rem2} = ${fmt(stop2)} m`});}
+
+  return qs;
+}
+
+const LEVELS = [
+  { id:1, title:"Remweg & Factoren", icon:"🛑", description:"Wat beïnvloedt de remweg?",
+    questions:[
+      {type:"text",question:"Wat is de remweg van een auto?",options:["De afstand die de auto aflegt tijdens de reactietijd","De afstand die de auto aflegt van het moment van remmen tot stilstand","De totale afstand inclusief reactie-afstand","De snelheid waarmee je kunt remmen"],answer:1,explanation:"De remweg is de afstand die een voertuig aflegt tijdens het remmen — van het moment dat de remmen aangrijpen tot de auto volledig stilstaat."},
+      {type:"text",question:"Van welke drie factoren hangt de remweg af?",options:["Beginsnelheid, massa en remkracht","Beginsnelheid, reactietijd en wegdek","Massa, weersomstandigheden en bandenspanning","Remkracht, reactietijd en massa"],answer:0,explanation:"De drie factoren zijn: (1) beginsnelheid, (2) (totale) massa van de auto, en (3) remkracht. Groter beginsnelheid of massa → langere remweg. Grotere remkracht → kortere remweg."},
+      {type:"text",question:"Een auto rijdt harder. Wat gebeurt er met de remweg?",options:["De remweg wordt korter","De remweg blijft gelijk","De remweg wordt langer","Dat hangt alleen af van de massa"],answer:2,explanation:"Hoe groter de beginsnelheid, hoe langer de remweg. Als de snelheid n× zo groot wordt, wordt de remweg zelfs n² zo lang."},
+      {type:"remweg_graph",question:"Lees af uit de grafiek: hoe lang is de remweg bij 80 km/h?",showPoint:{v:80,s:40},options:["20 m","30 m","40 m","50 m"],answer:2,explanation:"Bij 80 km/h lees je af dat de remweg 40 m is. Ter controle: 80 km/h is 2× zo groot als 40 km/h, dus remweg is 2² = 4× langer: 4 × 10 = 40 m. ✓"},
+      {type:"remweg_graph",question:"Lees af: hoe lang is de remweg bij 120 km/h?",showPoint:{v:120,s:90},options:["60 m","75 m","90 m","100 m"],answer:2,explanation:"Bij 120 km/h is de remweg 90 m. 120 is 3× zo groot als 40 → 3² = 9× langer → 9 × 10 = 90 m. ✓"},
+      {type:"text",question:"Het wegdek is nat door regen. Wat is het gevolg voor de remweg?",options:["De remweg wordt korter omdat het wegdek vochtig is","De remweg blijft hetzelfde","De remweg wordt langer omdat de remkracht kleiner is","Natte weg heeft geen invloed"],answer:2,explanation:"Op nat of glad wegdek grijpen de banden minder goed. De remkracht is kleiner, waardoor de remweg langer wordt — soms veel langer dan normaal."},
+    ]},
+  { id:2, title:"Rekenen met Remweg", icon:"🔢", description:"Bereken remweg, reactie-afstand en stopafstand",
+    questions:[], generate: generateRemwegQuestions },
+  { id:3, title:"Reactietijd & Stopafstand", icon:"⏱️", description:"Reactietijd, reactie-afstand en stopafstand",
+    questions:[
+      {type:"text",question:"Wat is de reactietijd?",options:["De tijd om de auto te remmen","De tijd tussen het zien van een gevaar en het aangrijpen van de remmen","De tijd die de auto nodig heeft om tot stilstand te komen","De tijd dat je op het rempedaal trapt"],answer:1,explanation:"De reactietijd is de tijd tussen het waarnemen van gevaar en het moment dat de remmen daadwerkelijk aangrijpen."},
+      {type:"text",question:"Hoe lang is de reactietijd normaal gesproken?",options:["0,1 tot 0,3 s","0,3 tot 0,5 s","0,7 tot 1,0 s","1,5 tot 2,0 s"],answer:2,explanation:"De reactietijd ligt normaal gesproken tussen 0,7 en 1,0 s. Vermoeidheid, alcohol of bepaalde medicijnen kunnen de reactietijd aanzienlijk verlengen."},
+      {type:"text",question:"Wat is de stopafstand?",options:["Alleen de remweg","Reactie-afstand minus remweg","Reactie-afstand plus remweg","De weg die je rijdt voordat je begint te remmen"],answer:2,explanation:"Stopafstand = reactie-afstand + remweg. Je legt ook afstand af tijdens je reactietijd (voordat de remmen ingrijpen)."},
+      {type:"stopafstand_show",question:"De reactie-afstand is 15 m en de remweg is 20 m. Wat is de stopafstand?",stopData:{reactieAfstand:15,remweg:20},options:["15 m","20 m","30 m","35 m"],answer:3,explanation:"Stopafstand = reactie-afstand + remweg = 15 + 20 = 35 m."},
+      {type:"text",question:"Een bestuurder is moe. Wat is het gevolg?",options:["Zijn reactietijd wordt korter","Zijn reactietijd wordt langer, waardoor de stopafstand toeneemt","De remweg wordt kleiner","Er is geen effect op de rijveiligheid"],answer:1,explanation:"Vermoeidheid verlengt de reactietijd. Een langere reactietijd → grotere reactie-afstand → grotere stopafstand → grotere kans op ongelukken."},
+      {type:"text",question:"Welke factor verlengt de reactietijd NIET?",options:["Alcohol","Vermoeidheid","Een grotere massa van de auto","Bepaalde medicijnen"],answer:2,explanation:"De massa van de auto heeft geen invloed op de reactietijd van de bestuurder. Alcohol, vermoeidheid en sommige medicijnen wel."},
+    ]},
+  { id:4, title:"Veiligheid & Bescherming", icon:"🛡️", description:"Veiligheidsmaatregelen bij botsingen",
+    questions:[
+      {type:"text",question:"Waarom draag je een gordel in de auto?",options:["Om bij een botsing sneller te stoppen","Om de botskracht over een langere tijd en groter oppervlak te spreiden","Om de remweg te verkorten","Om de reactietijd te verkorten"],answer:1,explanation:"Een gordel houdt je vast bij een botsing. Hij spreidt de kracht over een groot deel van je lichaam (schouders, borst, bekken) en verlengt de botsduur, wat ernstig letsel vermindert."},
+      {type:"text",question:"Wat doet een airbag bij een botsing?",options:["Hij verkort de remweg","Hij verlengt de reactietijd","Hij vangt de klap op door het lichaam zacht in te laten veren","Hij meet de botssnelheid"],answer:2,explanation:"Een airbag blaast razendsnel op. Je hoofd en lichaam veren dan in de zachte zak, wat de botskracht spreidt over een groter oppervlak en langere tijd."},
+      {type:"text",question:"Wat is het doel van kreukelzones aan de voor- en achterkant van een auto?",options:["De auto lichter maken","De motor beschermen","Botsenergie opnemen zodat de passagiersruimte intact blijft","De remweg verkorten"],answer:2,explanation:"Kreukelzones vervormen bewust bij een botsing. Ze absorberen daarmee de botsenergie, zodat de passagiersruimte zo min mogelijk beschadigt en inzittenden beschermd blijven."},
+      {type:"text",question:"Welke maatregel verkleint de remweg?",options:["Grotere massa van de auto","Natte weg","Grotere remkracht (harder remmen)","Hogere beginsnelheid"],answer:2,explanation:"Hoe groter de remkracht, hoe korter de remweg (zolang de auto niet slipt). Grotere massa of hogere snelheid maakt de remweg langer. Natte weg vermindert de remkracht."},
+      {type:"text",question:"Een auto is zwaar beladen. Wat geldt dan op de snelweg?",options:["Je mag harder rijden, de auto is stabieler","Je kunt minder afstand houden","Je moet meer afstand houden omdat de remweg langer is","Je reactietijd is korter"],answer:2,explanation:"Een zwaardere auto heeft een langere remweg. Meer afstand houden geeft je meer ruimte om te stoppen en voorkomt botsingen bij plotselinge noodsituaties."},
+      {type:"text",question:"Welke combinatie verkleint de stopafstand het meest?",options:["Harder rijden en kort afstand houden","Lagere snelheid en meer afstand houden","Zwaardere auto en natte weg","Hogere snelheid en grotere remkracht"],answer:1,explanation:"Lagere snelheid geeft een kortere remweg én kortere reactie-afstand. Meer afstand houden geeft extra speelruimte. Samen verkleinen ze de kans op een botsing aanzienlijk."},
+    ]},
+];
+
+const LC=["#ef4444","#f59e0b","#60a5fa","#34d399"];
+const LB=["linear-gradient(135deg,#7f1d1d,#991b1b)","linear-gradient(135deg,#78350f,#92400e)","linear-gradient(135deg,#1e3a8a,#1d4ed8)","linear-gradient(135deg,#064e3b,#065f46)"];
+
+function App() {
+  const [screen,setScreen]   = useState("home");
+  const [lvlIdx,setLvlIdx]   = useState(0);
+  const [qIdx,setQIdx]       = useState(0);
+  const [sel,setSel]         = useState(null);
+  const [done,setDone]       = useState(false);
+  const [scores,setScores]   = useState([0,0,0,0]);
+  const [pts,setPts]         = useState(0);
+  const [streak,setStreak]   = useState(0);
+  const [maxStr,setMaxStr]   = useState(0);
+  const [stars,setStars]     = useState([0,0,0,0]);
+  const [shake,setShake]     = useState(false);
+  const [genQuestions,setGenQuestions] = useState(null);
+  const [avatar,setAvatar]   = useState(DEFAULT_AVATAR);
+  const [owned,setOwned]     = useState(DEFAULT_OWNED);
+  const [shopCat,setShopCat] = useState("body");
+  const [buyFlash,setBuyFlash]= useState(null);
+
+  useEffect(()=>{
+    try {
+      const raw=localStorage.getItem("beweging_save");
+      if(raw){
+        const d=JSON.parse(raw);
+        if(d.avatar){const av={...DEFAULT_AVATAR,...d.avatar};if(av.face&&!av.badge){av.badge="badge_none";delete av.face;}setAvatar(av);}
+        if(d.owned){const ow=d.owned.filter(id=>!id.startsWith("face_"));if(!ow.includes("badge_none"))ow.push("badge_none");setOwned(ow);}
+        if(d.pts!==undefined) setPts(d.pts);
+        if(d.stars_54) setStars(d.stars_54);
+      }
+    } catch(e){}
+  },[]);
+
+  const save=(av,ow,p,st)=>{
+    try{
+      const prev=JSON.parse(localStorage.getItem("beweging_save"))||{};
+      localStorage.setItem("beweging_save",JSON.stringify({...prev,avatar:av,owned:ow,pts:p,...(st?{stars_54:st}:{})}));
+    }catch(e){}
+  };
+
+  const addPoints=n=>setPts(p=>{const np=p+n;save(avatar,owned,np);return np;});
+
+  const buyItem=item=>{
+    if(owned.includes(item.id)||pts<item.price) return;
+    const no=[...owned,item.id],np=pts-item.price;
+    setOwned(no);setPts(np);setBuyFlash(item.id);setTimeout(()=>setBuyFlash(null),1200);save(avatar,no,np);
+  };
+  const equipItem=(cat,item)=>{
+    if(!owned.includes(item.id)) return;
+    const na={...avatar,[cat]:item.id};setAvatar(na);save(na,owned,pts);
+  };
+
+  const level=LEVELS[lvlIdx];
+  const questions=(lvlIdx===1&&genQuestions)?genQuestions:level?.questions;
+  const q=questions?.[qIdx], total=questions?.length;
+  const correct=done&&sel===q?.answer;
+  const goHome=()=>{setScreen("home");setSel(null);setDone(false);};
+
+  const handleConfirm=()=>{
+    if(sel===null) return;
+    setDone(true);
+    if(sel===q.answer){
+      const ns=streak+1;setStreak(ns);setMaxStr(s=>Math.max(s,ns));
+      addPoints(10+(ns>2?5:0));
+      setScores(s=>{const n=[...s];n[lvlIdx]++;return n;});
+    } else {setStreak(0);setShake(true);setTimeout(()=>setShake(false),600);}
+  };
+
+  const handleNext=()=>{
+    setSel(null);setDone(false);
+    if(qIdx+1<total){setQIdx(i=>i+1);}
+    else{
+      const pct=scores[lvlIdx]/total;
+      const newStar=pct>=.85?3:pct>=.6?2:pct>=.33?1:0;
+      setStars(s=>{
+        const n=[...s];n[lvlIdx]=newStar;
+        save(avatar,owned,pts,n);
+        return n;
+      });
+      setScreen("result");
+    }
+  };
+
+  const startLevel=i=>{
+    setLvlIdx(i);setQIdx(0);setSel(null);setDone(false);
+    setScores(s=>{const n=[...s];n[i]=0;return n;});
+    if(i===1) setGenQuestions(LEVELS[1].generate());
+    setScreen("question");
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e)",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9",paddingBottom:40}}>
+      <style>{`
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}60%{transform:translateX(8px)}}
+        @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+        .ch:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)!important;transition:all .2s}
+        .ob:hover{border-color:#fbbf24!important;background:rgba(251,191,36,.08)!important}
+        button{font-family:inherit}
+      `}</style>
+
+      <div style={{background:"rgba(255,255,255,.03)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"9px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <a href="index.html" style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,textDecoration:"none"}}>⚡ Home</a>
+          {screen!=="home"&&<button onClick={goHome} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12}}>← Levels</button>}
+          <span style={{fontSize:20}}>🛑</span>
+          <div><div style={{fontWeight:700,fontSize:13}}>BewegingsGame</div><div style={{fontSize:10,color:"#64748b"}}>2 HAVO · §5.4</div></div>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#fbbf24"}}>{pts}</div><div style={{fontSize:10,color:"#64748b"}}>punten</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#f472b6"}}>🔥{streak}</div><div style={{fontSize:10,color:"#64748b"}}>streak</div></div>
+          <button onClick={()=>setScreen("shop")} style={{background:"none",border:"none",cursor:"pointer",padding:2}}><AvatarDisplay avatar={avatar} size={36}/></button>
+        </div>
+      </div>
+
+      <div style={{maxWidth:540,margin:"0 auto",padding:"20px 14px"}}>
+
+        {screen==="home"&&(
+          <div style={{animation:"fadeIn .4s ease"}}>
+            <div style={{textAlign:"center",marginBottom:26}}>
+              <div style={{fontSize:44,marginBottom:6}}>🛑</div>
+              <h1 style={{fontSize:23,fontWeight:800,margin:0,background:"linear-gradient(90deg,#ef4444,#f59e0b)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Remmen en Botsen</h1>
+              <p style={{color:"#94a3b8",marginTop:8,fontSize:13}}>Kies een level en versla alle opdrachten!</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              {LEVELS.map((l,i)=>(
+                <div key={i} className="ch" onClick={()=>startLevel(i)} style={{background:LB[i],borderRadius:16,padding:"17px 13px",cursor:"pointer",border:`1px solid ${LC[i]}40`,transition:"all .2s",position:"relative",overflow:"hidden"}}>
+                  <div style={{fontSize:28,marginBottom:5}}>{l.icon}</div>
+                  <div style={{fontWeight:700,fontSize:14}}>{l.title}</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,.65)",marginTop:3}}>{l.description}</div>
+                  <div style={{marginTop:8,display:"flex",gap:2}}>{[1,2,3].map(s=><span key={s} style={{fontSize:13,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
+                  <div style={{position:"absolute",top:9,right:9,background:"rgba(0,0,0,.3)",borderRadius:7,padding:"2px 7px",fontSize:10,color:LC[i]}}>{i===1?6:l.questions.length} vr.</div>
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:20,background:"rgba(255,255,255,.03)",borderRadius:12,padding:14,border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{fontSize:11,color:"#64748b",marginBottom:8}}>📚 LEERDOELEN</div>
+              {["Uitleggen wat de remweg is en waarvan deze afhangt","Remweg berekenen bij gewijzigde snelheid (n²-regel)","Reactietijd, reactie-afstand en stopafstand berekenen","Veiligheidsmaatregelen bij botsingen benoemen"].map((d,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0",fontSize:13,color:"#cbd5e1"}}><span style={{color:LC[i]}}>▸</span> {d}</div>
+              ))}
+            </div>
+            <button onClick={()=>setScreen("shop")} className="ch" style={{marginTop:12,width:"100%",padding:"14px 16px",background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",gap:14,transition:"all .2s"}}>
+              <AvatarDisplay avatar={avatar} size={52}/>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontWeight:700,fontSize:14,color:"#f1f5f9"}}>🛍️ Avatar Winkel</div>
+                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Geef je punten uit aan items!</div>
+                <div style={{fontSize:12,color:"#fbbf24",marginTop:2}}>💰 {pts} punten beschikbaar</div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {screen==="question"&&q&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{marginBottom:16}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:12,color:"#64748b"}}>
+                <span>{level.icon} {level.title}</span><span>Vraag {qIdx+1} / {total}</span>
+              </div>
+              <div style={{height:5,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${((qIdx+(done?1:0))/total)*100}%`,transition:"width .5s ease"}}/>
+              </div>
+            </div>
+
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:16,padding:16,border:`1px solid ${LC[lvlIdx]}30`,marginBottom:12,animation:shake?"shake .6s ease":"none"}}>
+              <div style={{fontSize:14,fontWeight:600,lineHeight:1.55,marginBottom:10}}>{q.question}</div>
+
+              {q.type==="remweg_graph"&&<RemwegGrafiek showPoint={done?q.showPoint:null}/>}
+              {q.type==="stopafstand_show"&&<StopafstandBar reactieAfstand={q.stopData.reactieAfstand} remweg={q.stopData.remweg}/>}
+
+              {(q.type==="calc"||q.type==="stopafstand")&&q.given&&(
+                <div style={{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.2)",borderRadius:10,padding:12,marginBottom:8}}>
+                  <div style={{fontSize:11,color:"#fbbf24",marginBottom:6}}>📋 GEGEVEN</div>
+                  {q.given.map(([k,v])=><div key={k} style={{fontSize:14,fontFamily:"monospace",color:"#e2e8f0"}}>{k} = {v}</div>)}
+                </div>
+              )}
+              {q.type==="stopafstand"&&done&&q.stopData&&<StopafstandBar reactieAfstand={q.stopData.reactieAfstand} remweg={q.stopData.remweg}/>}
+            </div>
+
+            <div style={{display:"grid",gap:9,marginBottom:12}}>
+              {q.options.map((opt,i)=>{
+                let bg="rgba(255,255,255,.04)",border="rgba(255,255,255,.1)",col="#e2e8f0";
+                if(sel===i&&!done){bg="rgba(251,191,36,.12)";border="#fbbf24";}
+                if(done){if(i===q.answer){bg="rgba(52,211,153,.12)";border="#34d399";col="#34d399";}else if(i===sel&&i!==q.answer){bg="rgba(239,68,68,.12)";border="#ef4444";col="#ef4444";}}
+                return(
+                  <button key={i} className={!done?"ob":""} onClick={()=>{if(!done)setSel(i);}}
+                    style={{background:bg,border:`1.5px solid ${border}`,borderRadius:12,padding:"12px 14px",color:col,fontSize:14,fontWeight:500,cursor:done?"default":"pointer",textAlign:"left",transition:"all .2s",display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{minWidth:22,height:22,borderRadius:6,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700}}>
+                      {done?(i===q.answer?"✓":i===sel?"✗":String.fromCharCode(65+i)):String.fromCharCode(65+i)}
+                    </span>{opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            {done&&(
+              <div style={{background:correct?"rgba(52,211,153,.08)":"rgba(239,68,68,.08)",border:`1px solid ${correct?"#34d399":"#ef4444"}40`,borderRadius:12,padding:14,marginBottom:12,animation:"popIn .3s ease"}}>
+                <div style={{fontSize:13,fontWeight:600,color:correct?"#34d399":"#f87171",marginBottom:4}}>
+                  {correct?"✅ Goed gedaan!":"❌ Niet helemaal..."}
+                  {correct&&streak>2&&<span style={{marginLeft:8,color:"#fbbf24"}}>🔥 {streak}x streak! +5</span>}
+                </div>
+                <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.6}}>💡 {q.explanation}</div>
+              </div>
+            )}
+
+            {!done?(
+              <button onClick={handleConfirm} disabled={sel===null} style={{width:"100%",padding:14,background:sel!==null?`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`:"rgba(255,255,255,.05)",border:"none",borderRadius:12,color:sel!==null?"#0a0f1e":"#475569",fontWeight:700,fontSize:15,cursor:sel!==null?"pointer":"default",transition:"all .2s"}}>
+                Controleer →
+              </button>
+            ):(
+              <button onClick={handleNext} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+                {qIdx+1<total?"Volgende vraag →":"Resultaat bekijken 🏆"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {screen==="result"&&(
+          <div style={{animation:"fadeIn .4s ease",textAlign:"center"}}>
+            <div style={{fontSize:52,marginBottom:6}}>{scores[lvlIdx]===total?"🏆":scores[lvlIdx]>=total*.6?"🎉":"💪"}</div>
+            <h2 style={{fontSize:21,fontWeight:800,margin:"0 0 4px"}}>{level.title} — Klaar!</h2>
+            <div style={{fontSize:14,color:"#94a3b8",marginBottom:20}}>{scores[lvlIdx]} van {total} goed beantwoord</div>
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:20}}>
+              {[1,2,3].map(s=><span key={s} style={{fontSize:34,opacity:stars[lvlIdx]>=s?1:.2,animation:stars[lvlIdx]>=s?`popIn .4s ease ${s*.15}s both`:"none"}}>⭐</span>)}
+            </div>
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:14,marginBottom:14,border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                <span style={{fontSize:13,color:"#94a3b8"}}>Score</span>
+                <span style={{fontSize:13,fontWeight:700,color:LC[lvlIdx]}}>{Math.round((scores[lvlIdx]/total)*100)}%</span>
+              </div>
+              <div style={{height:7,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${(scores[lvlIdx]/total)*100}%`,transition:"width 1s ease"}}/>
+              </div>
+            </div>
+            <div style={{background:"rgba(251,191,36,.06)",borderRadius:12,padding:12,marginBottom:14,border:"1px solid rgba(251,191,36,.15)"}}>
+              <div style={{fontSize:13,color:"#fbbf24"}}>🔥 Langste streak: {maxStr}x &nbsp;|&nbsp; 🎯 Totaal: {pts} punten</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+              <button onClick={()=>startLevel(lvlIdx)} style={{padding:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>🔄 Opnieuw</button>
+              <button onClick={goHome} style={{padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,cursor:"pointer",fontSize:14}}>🏠 Levels</button>
+            </div>
+            <button onClick={()=>setScreen("shop")} style={{width:"100%",padding:13,background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
+              <AvatarDisplay avatar={avatar} size={32}/> 🛍️ Naar de winkel
+            </button>
+            {lvlIdx<LEVELS.length-1&&(
+              <button onClick={()=>startLevel(lvlIdx+1)} style={{width:"100%",padding:14,background:LB[lvlIdx+1],border:`1px solid ${LC[lvlIdx+1]}40`,borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14}}>
+                Volgend level: {LEVELS[lvlIdx+1].icon} {LEVELS[lvlIdx+1].title} →
+              </button>
+            )}
+          </div>
+        )}
+
+        {screen==="shop"&&(
+          <div style={{animation:"fadeIn .35s ease"}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:10}}><AvatarDisplay avatar={avatar} size={90}/></div>
+              <div style={{fontSize:18,fontWeight:800}}>Jouw Avatar</div>
+              <div style={{fontSize:13,color:"#94a3b8",marginTop:2}}>💰 {pts} punten beschikbaar</div>
+            </div>
+            <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:4}}>
+              {Object.entries(CAT_LABELS).map(([cat,label])=>(
+                <button key={cat} onClick={()=>setShopCat(cat)} style={{flexShrink:0,padding:"7px 13px",borderRadius:20,border:`1.5px solid ${shopCat===cat?"#60a5fa":"rgba(255,255,255,.1)"}`,background:shopCat===cat?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)",color:shopCat===cat?"#60a5fa":"#94a3b8",fontWeight:600,fontSize:12,cursor:"pointer",transition:"all .15s"}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              {SHOP[shopCat].map(item=>{
+                const isOwned=owned.includes(item.id),isEquipped=avatar[shopCat]===item.id,canAfford=pts>=item.price,justBought=buyFlash===item.id;
+                return(
+                  <div key={item.id} onClick={()=>isOwned?equipItem(shopCat,item):buyItem(item)} className="ch"
+                    style={{background:isEquipped?"rgba(96,165,250,.15)":justBought?"rgba(52,211,153,.15)":"rgba(255,255,255,.04)",
+                      border:`1.5px solid ${isEquipped?"#60a5fa":justBought?"#34d399":isOwned?"rgba(255,255,255,.18)":"rgba(255,255,255,.08)"}`,
+                      borderRadius:14,padding:"14px 12px",cursor:(!isOwned&&!canAfford)?"not-allowed":"pointer",
+                      opacity:(!isOwned&&!canAfford)?.45:1,transition:"all .2s",textAlign:"center",position:"relative"}}>
+                    {shopCat==="bg"
+                      ?<div style={{width:40,height:40,borderRadius:"50%",background:item.color,margin:"0 auto 8px",border:"2px solid rgba(255,255,255,.15)"}}/>
+                      :<div style={{fontSize:34,marginBottom:6,lineHeight:1}}>{item.emoji||"−"}</div>
+                    }
+                    <div style={{fontWeight:600,fontSize:13,color:"#f1f5f9"}}>{item.name}</div>
+                    <div style={{marginTop:5,fontSize:12}}>
+                      {isEquipped?<span style={{color:"#60a5fa",fontWeight:700}}>✓ Aan</span>
+                      :isOwned?<span style={{color:"#34d399",fontSize:11}}>In bezit — klik om aan te doen</span>
+                      :justBought?<span style={{color:"#34d399",fontWeight:700}}>✓ Gekocht!</span>
+                      :<span style={{color:canAfford?"#fbbf24":"#ef4444",fontWeight:600}}>💰 {item.price} punten</span>}
+                    </div>
+                    {isEquipped&&<div style={{position:"absolute",top:8,right:8,width:10,height:10,borderRadius:"50%",background:"#60a5fa"}}/>}
+                  </div>
+                );
+              })}
+            </div>
+            <button onClick={goHome} style={{width:"100%",padding:13,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>
+              ← Terug naar levels
+            </button>
+          </div>
+        )}
+
+      </div>
     </div>
-  </div>
+  );
+}
 
-  <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:14px;margin-bottom:28px;font-size:13px;color:#fbbf24;animation:pulse 2s ease infinite">
-    ⏳ Komt binnenkort beschikbaar
-  </div>
-
-  <a href="index.html" style="display:inline-block;padding:13px 28px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#e2e8f0;font-weight:600;font-size:14px;text-decoration:none">
-    ← Terug naar overzicht
-  </a>
-</div>
-
-<script>
-try{const save=JSON.parse(localStorage.getItem("beweging_save"))||{};document.getElementById("hdr-pts").textContent=save.pts||0;}catch(e){}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
 </body>
 </html>
