@@ -45,11 +45,11 @@ const SHOP = {
     { id:"appbg_default", css:"linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e)", name:"Standaard",     price:0,    unlocked:true },
     { id:"appbg_green",   css:"linear-gradient(160deg,#022c22,#064e3b 60%,#022c22)", name:"Bosgroen",      price:300  },
     { id:"appbg_purple",  css:"linear-gradient(160deg,#1e0a3c,#2d1b69 60%,#1e0a3c)", name:"Paars",         price:400  },
-    { id:"appbg_red",     css:"linear-gradient(160deg,#1a0505,#450a0a 60%,#1a0505)", name:"Bloedrood",     price:500,  starReq:22 },
-    { id:"appbg_ocean",   css:"linear-gradient(160deg,#001c3d,#0c4a6e 60%,#001c3d)", name:"Oceaan",        price:600,  starReq:28 },
-    { id:"appbg_gold",    css:"linear-gradient(160deg,#1c0a00,#44220a 60%,#1c0a00)", name:"Goud",          price:900,  starReq:36 },
-    { id:"appbg_galaxy",  css:"radial-gradient(ellipse at 30% 40%,#0f0c29 0%,#302b63 50%,#24243e 100%)",   name:"Kosmisch",  price:1400, starReq:48 },
-    { id:"appbg_bright_gold", css:"linear-gradient(160deg,#3d2000,#7a4a00,#c4900a 60%,#3d2000)", name:"Gouden Gloed ✨", price:2500, starReq:60 },
+    { id:"appbg_red",     css:"linear-gradient(160deg,#1a0505,#450a0a 60%,#1a0505)", name:"Bloedrood",     price:500,  starReq:14 },
+    { id:"appbg_ocean",   css:"linear-gradient(160deg,#001c3d,#0c4a6e 60%,#001c3d)", name:"Oceaan",        price:600,  starReq:22 },
+    { id:"appbg_gold",    css:"linear-gradient(160deg,#1c0a00,#44220a 60%,#1c0a00)", name:"Goud",          price:900,  starReq:32 },
+    { id:"appbg_galaxy",  css:"radial-gradient(ellipse at 30% 40%,#0f0c29 0%,#302b63 50%,#24243e 100%)",   name:"Kosmisch",  price:1400, starReq:40 },
+    { id:"appbg_bright_gold", css:"linear-gradient(160deg,#3d2000,#7a4a00,#c4900a 60%,#3d2000)", name:"Gouden Gloed ✨", price:2500, starReq:48 },
   ],
 };
 
