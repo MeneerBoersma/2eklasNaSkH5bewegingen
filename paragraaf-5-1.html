@@ -3,82 +3,634 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>§5.1 Bewegingen vastleggen · 2 HAVO</title>
+  <title>§5.1 Bewegingen Vastleggen · 2 HAVO</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="shop-data.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e);min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;padding-bottom:48px}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-    @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
-    button{font-family:inherit;cursor:pointer}
+    body{background:#0a0f1e;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
   </style>
 </head>
 <body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
 
-<!-- HEADER -->
-<div style="background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);padding:11px 20px;display:flex;align-items:center;justify-content:space-between">
-  <div style="display:flex;align-items:center;gap:10px">
-    <a href="index.html" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;color:#94a3b8;font-size:12px;text-decoration:none">← Overzicht</a>
-    <span style="font-size:18px">📸</span>
-    <div>
-      <div style="font-weight:700;font-size:13px">§5.1 · Bewegingen vastleggen</div>
-      <div style="font-size:10px;color:#64748b">2 HAVO · Nova</div>
-    </div>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center">
-    <div style="text-align:center"><div id="hdr-pts" style="font-size:16px;font-weight:700;color:#fbbf24">0</div><div style="font-size:10px;color:#64748b">punten</div></div>
-  </div>
-</div>
+// SHOP, CAT_LABELS, DEFAULT_AVATAR, DEFAULT_OWNED → geladen via shop-data.js
 
-<div style="max-width:540px;margin:0 auto;padding:40px 16px;text-align:center;animation:fadeIn .5s ease">
+// Avatar-tekenlogica zit in shop-data.js → renderAvatarHTML()
+function AvatarDisplay({ avatar, size=64 }) {
+  return <span dangerouslySetInnerHTML={{__html: renderAvatarHTML(avatar, size)}} style={{display:"contents"}}/>;
+}
 
-  <!-- ICON -->
-  <div style="font-size:72px;margin-bottom:16px">🚧</div>
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt  = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".",",");
 
-  <h1 style="font-size:22px;font-weight:800;margin-bottom:8px">In aanbouw</h1>
-  <p style="color:#94a3b8;font-size:14px;line-height:1.7;max-width:380px;margin:0 auto 32px">
-    De oefeningen voor <strong style="color:#60a5fa">§5.1 Bewegingen vastleggen</strong> worden binnenkort toegevoegd.<br><br>
-    Onderwerpen die aan bod komen:
-  </p>
+function makeOptions(correct, wrongs) {
+  const unique = [...new Set(wrongs.filter(w=>w!==correct))];
+  const all = [correct,...unique.slice(0,3)];
+  let pad=1; while(all.length<4) all.push(`${pad++}?`);
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  return {options:all, answer:all.indexOf(correct)};
+}
 
-  <!-- TOPICS -->
-  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:36px;text-align:left">
-    <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:20px">📷</span>
-      <div>
-        <div style="font-weight:600;font-size:13px">Stroboscopische opnamen</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:2px">Posities aflezen uit tijdopnamen</div>
+// ─── STROBOSCOPISCHE ANIMATIE ─────────────────────────────────────────────────
+function StroboAnimation({ type }) {
+  const [frame, setFrame] = useState(0);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setFrame(f => (f + 1) % 7), type === "uniform" ? 500 : 400);
+    return () => clearInterval(id);
+  }, [type]);
+
+  // 7 posities berekenen
+  const positions = Array.from({length:7}, (_,i) => {
+    if(type === "uniform")    return 20 + i * 36;
+    if(type === "accelerating") return 10 + i*i * 5;
+    if(type === "decelerating") return 10 + (36*i - i*i*2.5);
+    return 20 + i * 36;
+  });
+
+  return (
+    <div style={{background:"#0f172a",borderRadius:12,padding:"14px 10px",marginBottom:10,border:"1px solid #1e3a5f"}}>
+      <svg width="100%" viewBox="0 0 280 60" style={{display:"block"}}>
+        {/* Meetlat */}
+        {Array.from({length:8},(_,i)=>(
+          <g key={i}>
+            <line x1={10+i*37} y1={48} x2={10+i*37} y2={54} stroke="#475569" strokeWidth="1"/>
+            <text x={10+i*37} y={58} fill="#64748b" fontSize="7" textAnchor="middle">{i*10}</text>
+          </g>
+        ))}
+        <line x1={10} y1={52} x2={270} y2={52} stroke="#334155" strokeWidth="1"/>
+        <text x={275} y={56} fill="#64748b" fontSize="7">cm</text>
+
+        {/* Alle "geflitste" bolposities als transparante cirkels */}
+        {positions.map((x,i) => (
+          <circle key={i} cx={Math.min(x, 268)} cy={26} r={10}
+            fill={i <= frame ? (type==="uniform"?"rgba(96,165,250,.25)":type==="accelerating"?"rgba(52,211,153,.25)":"rgba(251,191,36,.25)"): "none"}
+            stroke={i <= frame ? (type==="uniform"?"#60a5fa":type==="accelerating"?"#34d399":"#fbbf24") : "none"}
+            strokeWidth="1.5"/>
+        ))}
+        {/* Huidige positie */}
+        <circle cx={Math.min(positions[frame], 268)} cy={26} r={11}
+          fill={type==="uniform"?"#60a5fa":type==="accelerating"?"#34d399":"#fbbf24"}
+          opacity={0.9}/>
+        <circle cx={Math.min(positions[frame], 268)} cy={26} r={5} fill="white" opacity={0.6}/>
+      </svg>
+      <div style={{fontSize:11,color:"#64748b",textAlign:"center",marginTop:2}}>
+        {type==="uniform"&&"⬅️ gelijke stappen → eenparige beweging"}
+        {type==="accelerating"&&"⬅️ steeds grotere stappen → versnellende beweging"}
+        {type==="decelerating"&&"⬅️ steeds kleinere stappen → vertragende beweging"}
       </div>
     </div>
-    <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:20px">📐</span>
-      <div>
-        <div style="font-weight:600;font-size:13px">Afstand en tijd meten</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:2px">Schaal toepassen · eenheden omrekenen</div>
+  );
+}
+
+// ─── PLAATST-TIJDGRAFIEK SVG ──────────────────────────────────────────────────
+function PlaatsTijdGrafiek({ shape, showReading }) {
+  const W=280, H=160, PL=40, PB=28, PT=10, PR=12;
+  const w=W-PL-PR, h=H-PB-PT;
+  const tMax=5, xMax=40;
+  const mx=t=>PL+(t/tMax)*w;
+  const my=x=>PT+h-(x/xMax)*h;
+
+  let pathData="";
+  if(shape==="straight")      pathData=`M${mx(0)},${my(0)} L${mx(5)},${my(30)}`;
+  if(shape==="concaveUp")     pathData=`M${mx(0)},${my(0)} Q${mx(2.5)},${my(3)} ${mx(5)},${my(35)}`;
+  if(shape==="concaveDown")   pathData=`M${mx(0)},${my(0)} Q${mx(2.5)},${my(28)} ${mx(5)},${my(32)}`;
+  if(shape==="horizontal")    pathData=`M${mx(0)},${my(20)} L${mx(5)},${my(20)}`;
+
+  const lineColor = shape==="concaveUp"?"#34d399":shape==="concaveDown"?"#f59e0b":shape==="horizontal"?"#f472b6":"#60a5fa";
+
+  return (
+    <div style={{display:"flex",justifyContent:"center",margin:"8px 0"}}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:12,border:"1px solid #334155",display:"block"}}>
+        {[0,10,20,30,40].map(x=>(
+          <g key={x}>
+            <line x1={PL} y1={my(x)} x2={PL+w} y2={my(x)} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/>
+            <text x={PL-4} y={my(x)+3} fill="#64748b" fontSize="8" textAnchor="end" fontFamily="monospace">{x}</text>
+          </g>
+        ))}
+        {[0,1,2,3,4,5].map(t=>(
+          <g key={t}>
+            <line x1={mx(t)} y1={PT} x2={mx(t)} y2={PT+h} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/>
+            <text x={mx(t)} y={PT+h+16} fill="#64748b" fontSize="8" textAnchor="middle" fontFamily="monospace">{t}</text>
+          </g>
+        ))}
+        <line x1={PL} y1={PT} x2={PL} y2={PT+h} stroke="#475569" strokeWidth="1.5"/>
+        <line x1={PL} y1={PT+h} x2={PL+w+4} y2={PT+h} stroke="#475569" strokeWidth="1.5"/>
+        <text x={PL-28} y={PT+h/2+3} fill="#94a3b8" fontSize="8" fontFamily="monospace">x (cm)</text>
+        <text x={PL+w/2} y={H-4} fill="#94a3b8" fontSize="8" fontFamily="monospace" textAnchor="middle">t (s)</text>
+        <path d={pathData} fill="none" stroke={lineColor} strokeWidth="2.5" strokeLinecap="round"/>
+        {showReading&&shape==="straight"&&(
+          <>
+            <line x1={mx(3)} y1={my(18)} x2={mx(3)} y2={PT+h} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="3,3"/>
+            <line x1={PL} y1={my(18)} x2={mx(3)} y2={my(18)} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="3,3"/>
+            <circle cx={mx(3)} cy={my(18)} r={4} fill="#ef4444"/>
+            <text x={mx(3)+5} y={my(18)-5} fill="#ef4444" fontSize="8" fontFamily="monospace">t=3 → x=18 cm</text>
+          </>
+        )}
+        {showReading&&shape==="horizontal"&&(
+          <>
+            <line x1={mx(2)} y1={my(20)} x2={mx(2)} y2={PT+h} stroke="#ef4444" strokeWidth="1.2" strokeDasharray="3,3"/>
+            <circle cx={mx(2)} cy={my(20)} r={4} fill="#ef4444"/>
+            <text x={mx(2)+5} y={my(20)-5} fill="#ef4444" fontSize="8" fontFamily="monospace">x = 20 cm (constant)</text>
+          </>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+// ─── STROBOSCOPISCHE REKENVRAGEN ──────────────────────────────────────────────
+function generateStroboQuestions() {
+  const qs = [];
+
+  // 1. Tijdsinterval → tijdstip
+  const scenarios = [
+    {flashes:5, interval:0.5, points:["A","B","C","D","E"], dist:[0,4,8,12,16]},
+    {flashes:6, interval:0.25, points:["A","B","C","D","E","F"], dist:[0,3,6,9,12,15]},
+    {flashes:4, interval:1.0, points:["A","B","C","D"], dist:[0,6,12,18]},
+    {flashes:5, interval:0.4, points:["A","B","C","D","E"], dist:[0,5,10,15,20]},
+  ];
+  const sc = pick(scenarios);
+  const pIdx = Math.floor(Math.random()*(sc.flashes-1))+1;
+  const t = (pIdx * sc.interval);
+  const correct = `${fmt(t)} s`;
+  const {options,answer} = makeOptions(correct,[`${fmt(t+sc.interval)} s`,`${fmt(t-sc.interval >= 0 ? t-sc.interval : t+0.2)} s`,`${fmt(sc.interval)} s`]);
+  qs.push({type:"strobo",question:`Op een stroboscopische foto staan de punten ${sc.points.slice(0,sc.flashes).join(", ")}. De tijd tussen twee flitsen is ${fmt(sc.interval)} s. Punt A is op t = 0 s. Op welk tijdstip was de bal bij punt ${sc.points[pIdx]}?`,
+    given:[["interval",`${fmt(sc.interval)} s`],["punt","A op t = 0 s"]],
+    options,answer,
+    explanation:`Tijdstip punt ${sc.points[pIdx]} = ${pIdx} × ${fmt(sc.interval)} = ${fmt(t)} s`});
+
+  // 2. Afgelegde afstand
+  const distSc = [
+    {x1:4, x2:16, name:"B en E", s:12},
+    {x1:0, x2:20, name:"A en F", s:20},
+    {x1:6, x2:18, name:"B en D", s:12},
+    {x1:3, x2:21, name:"B en G", s:18},
+    {x1:5, x2:25, name:"C en H", s:20},
+  ];
+  const ds = pick(distSc);
+  const correct2 = `${ds.s} cm`;
+  const {options:o2,answer:a2} = makeOptions(correct2,[`${ds.x2} cm`,`${ds.s+4} cm`,`${ds.x1} cm`]);
+  qs.push({type:"strobo",question:`Op een stroboscopische foto zijn de plaatsen van twee opeenvolgende punten afleesbaar: punt ${ds.name.split(" en ")[0]} op x = ${ds.x1} cm en punt ${ds.name.split(" en ")[1]} op x = ${ds.x2} cm. Wat is de afgelegde afstand?`,
+    given:[["x₁",`${ds.x1} cm`],["x₂",`${ds.x2} cm`]],
+    options:o2,answer:a2,
+    explanation:`Afgelegde afstand s = x₂ − x₁ = ${ds.x2} − ${ds.x1} = ${ds.s} cm`});
+
+  // 3. Fps → interval
+  const fpsOpts = [[30,33],[25,40],[50,20],[10,100],[20,50]];
+  const [fps,ms] = pick(fpsOpts);
+  const correct3 = `${ms} ms`;
+  const {options:o3,answer:a3} = makeOptions(correct3,[`${ms*2} ms`,`${Math.round(ms/2)} ms`,`${fps} ms`]);
+  qs.push({type:"calc",question:`Een videocamera maakt ${fps} beelden per seconde. Hoe groot is de tijd tussen twee opeenvolgende beelden?`,
+    given:[["fps",`${fps} beelden/s`]],
+    options:o3,answer:a3,
+    explanation:`1 s ÷ ${fps} = ${(1000/fps).toFixed(0)} ms ≈ ${ms} ms`});
+
+  // 4. Tabel invullen: welke tijd hoort bij welk punt
+  const tabSc = [
+    {interval:0.5, plaatsen:[0,3,10,21,36], pts:["A","B","C","D","E"], vraagPt:"D", vraagTijd:"1,5"},
+    {interval:0.4, plaatsen:[0,4,8,14,22], pts:["A","B","C","D","E"], vraagPt:"E", vraagTijd:"1,6"},
+    {interval:1.0, plaatsen:[0,5,15,30], pts:["A","B","C","D"], vraagPt:"C", vraagTijd:"2,0"},
+    {interval:0.5, plaatsen:[0,6,14,26,42], pts:["A","B","C","D","E"], vraagPt:"D", vraagTijd:"1,5"},
+  ];
+  const ts = pick(tabSc);
+  const pI = ts.pts.indexOf(ts.vraagPt);
+  const tV = (pI * ts.interval);
+  const correct4 = `${fmt(tV)} s`;
+  const {options:o4,answer:a4} = makeOptions(correct4,[`${fmt(tV + ts.interval)} s`,`${fmt(tV - ts.interval >= 0 ? tV-ts.interval : tV+0.3)} s`,`${fmt(ts.interval*2)} s`]);
+  qs.push({type:"strobo",question:`In een stroboscopische foto staat punt A op t = 0 s. De flitsinterval is ${fmt(ts.interval)} s. Welk tijdstip hoort bij punt ${ts.vraagPt}?`,
+    given:[["interval",`${fmt(ts.interval)} s`],[`punt ${ts.pts[0]}`,"t = 0 s"],[`punt ${ts.vraagPt}`,"= punt nr. "+pI]],
+    options:o4,answer:a4,
+    explanation:`Punt ${ts.vraagPt} is punt nummer ${pI}, dus t = ${pI} × ${fmt(ts.interval)} = ${fmt(tV)} s`});
+
+  // 5. Schaal: werkelijke afstand berekenen
+  const schaalSc = [
+    {schaal:"1:10", beeld_cm:5, echt_cm:50},
+    {schaal:"1:5", beeld_cm:8, echt_cm:40},
+    {schaal:"1:20", beeld_cm:3, echt_cm:60},
+    {schaal:"1:4", beeld_cm:6, echt_cm:24},
+  ];
+  const sch = pick(schaalSc);
+  const correct5 = `${sch.echt_cm} cm`;
+  const {options:o5,answer:a5} = makeOptions(correct5,[`${sch.beeld_cm} cm`,`${sch.echt_cm*2} cm`,`${sch.echt_cm/2} cm`]);
+  qs.push({type:"calc",question:`Een foto heeft een schaal van ${sch.schaal}. Op de foto meet een afstand ${sch.beeld_cm} cm. Hoe groot is dit in werkelijkheid?`,
+    given:[["schaal",sch.schaal],["afstand op foto",`${sch.beeld_cm} cm`]],
+    options:o5,answer:a5,
+    explanation:`Schaal ${sch.schaal} → werkelijke afstand = ${sch.beeld_cm} × ${sch.echt_cm/sch.beeld_cm} = ${sch.echt_cm} cm`});
+
+  // 6. Afgelegde afstand uit xt-diagram
+  const xtSc = [
+    {t1:0, x1:0, t2:2, x2:14, s:14},
+    {t1:1, x1:5, t2:4, x2:23, s:18},
+    {t1:0, x1:0, t2:5, x2:37, s:37},
+    {t1:0.5, x1:3, t2:2.0, x2:17, s:14},
+  ];
+  const xs = pick(xtSc);
+  const correct6 = `${xs.s} cm`;
+  const {options:o6,answer:a6} = makeOptions(correct6,[`${xs.x2} cm`,`${xs.s+7} cm`,`${Math.abs(xs.x1-xs.s)} cm`]);
+  qs.push({type:"calc",question:`In een (x,t)-diagram lees je af: op t = ${fmt(xs.t1)} s is x = ${xs.x1} cm, op t = ${fmt(xs.t2)} s is x = ${xs.x2} cm. Wat is de afgelegde afstand?`,
+    given:[[`x op t=${fmt(xs.t1)} s`,`${xs.x1} cm`],[`x op t=${fmt(xs.t2)} s`,`${xs.x2} cm`]],
+    options:o6,answer:a6,
+    explanation:`s = x₂ − x₁ = ${xs.x2} − ${xs.x1} = ${xs.s} cm`});
+
+  return qs;
+}
+
+// ─── LEVELS ───────────────────────────────────────────────────────────────────
+const LEVELS = [
+  { id:1, title:"Vastleggen & Begrippen", icon:"📸", description:"Hoe leg je beweging vast?",
+    questions:[
+      {type:"text",question:"Op welke twee manieren kun je een beweging vastleggen?",
+        options:["Met een stopwatch en een liniaal","Met een video-opname of een stroboscopische foto","Met een radar en een gps-tracker","Met een v,t-diagram en een stroomgeleider"],
+        answer:1,explanation:"Bewegingen kun je vastleggen door te filmen (video-opname) of door een stroboscopische foto te maken. Beide methoden geven een serie momentopnames waarmee je de beweging kunt analyseren."},
+      {type:"text",question:"Wat is een stroboscopische foto?",
+        options:["Een video-opname van een beweging","Een foto gemaakt met een flitslamp die met regelmatige tussenpozen knippert","Een röntgenfoto van een bewegend voorwerp","Een digitale meting via gps"],
+        answer:1,explanation:"Een stroboscopische foto maak je in een verduisterde ruimte met een stroboscooplamp. Die lamp knippert met regelmatige tussenpozen; bij elke flits wordt een momentopname op dezelfde foto vastgelegd."},
+      {type:"animation",animType:"uniform",question:"Wat zie je op deze stroboscopische animatie?",
+        options:["Een versnellende beweging, want de stappen worden groter","Een eenparige (constante) beweging, want de stappen zijn gelijk","Een vertragende beweging, want de stappen worden kleiner","Geen beweging, de bal staat stil"],
+        answer:1,explanation:"Bij een eenparige beweging zijn de stappen tussen opeenvolgende flitsen altijd even groot. Gelijke afstanden in gelijke tijdsvakken = constante snelheid."},
+      {type:"animation",animType:"accelerating",question:"Welk soort beweging toont deze animatie?",
+        options:["Eenparige beweging","Vertragende beweging","Versnellende beweging","Willekeurige beweging"],
+        answer:2,explanation:"De stappen worden steeds groter. De bal legt in elke volgende tijdsperiode meer afstand af — dat betekent een toenemende snelheid: versnellende beweging."},
+      {type:"text",question:"Wat moet je altijd weten om een stroboscopische foto of video te analyseren?",
+        options:["De kleur van het voorwerp en de cameramerk","De tijdsinterval tussen de opnames en de schaal van het beeld","De massa van het voorwerp en de luchtweerstand","De temperatuur en de luchtvochtigheid"],
+        answer:1,explanation:"Om een beweging te kunnen analyseren heb je twee dingen nodig: (1) de tijdsinterval tussen de momentopnames, en (2) de schaal (of een meetlat) om werkelijke afstanden te bepalen."},
+      {type:"text",question:"Wat is de schaal van een foto?",
+        options:["De helderheid van de foto","De verhouding tussen de werkelijke grootte en de grootte op de afbeelding","De tijd tussen twee flitsen","De kleurbalans van de opname"],
+        answer:1,explanation:"De schaal geeft de verhouding aan tussen de werkelijke grootte van een voorwerp en de grootte waarop het op de afbeelding zichtbaar is. Bijv. schaal 1:10 betekent dat 1 cm op de foto gelijkstaat aan 10 cm in werkelijkheid."},
+    ]},
+  { id:2, title:"Rekenen met Stroboscopie", icon:"🔢", description:"Tijdstip, afstand en schaal berekenen",
+    questions:[], generate: generateStroboQuestions },
+  { id:3, title:"Plaats-Tijdtabel & Diagram", icon:"📊", description:"Tabel invullen en grafiek aflezen",
+    questions:[
+      {type:"text",question:"Wat staat er in een plaats-tijdtabel?",
+        options:["De snelheid op elk moment","De plaats van het voorwerp op een aantal tijdstippen","De versnelling en de remweg","De massa en de kracht"],
+        answer:1,explanation:"Een plaats-tijdtabel bevat twee kolommen: tijdstip (t) en bijbehorende plaats (x). Zo kun je zien waar een voorwerp zich op elk gemeten moment bevindt."},
+      {type:"graph",shape:"straight",question:"Welk soort beweging toont dit (x,t)-diagram?",
+        options:["Stilstaand voorwerp","Eenparige (constante) beweging","Versnellende beweging","Vertragende beweging"],
+        answer:1,explanation:"Een rechte stijgende lijn in een (x,t)-diagram betekent een eenparige beweging: in gelijke tijdsintervallen wordt steeds dezelfde afstand afgelegd."},
+      {type:"graph",shape:"straight",showReading:true,question:"Lees af uit dit (x,t)-diagram: wat is de plaats op t = 3 s?",
+        options:["10 cm","14 cm","18 cm","22 cm"],
+        answer:2,explanation:"Bij t = 3 s lees je op de verticale as x = 18 cm af. De rode stippellijnen laten zien hoe je t = 3 opzoekt op de x-as."},
+      {type:"graph",shape:"concaveUp",question:"Wat toont dit (x,t)-diagram?",
+        options:["Eenparige beweging (rechte lijn)","Versnellende beweging (stappen worden groter)","Vertragende beweging (stappen worden kleiner)","Stilstaand voorwerp"],
+        answer:1,explanation:"Een concave (komvormige) lijn in een (x,t)-diagram betekent versnelling: de helling wordt steeds groter, de snelheid neemt toe."},
+      {type:"graph",shape:"concaveDown",question:"Wat toont dit (x,t)-diagram?",
+        options:["Eenparige beweging","Versnellende beweging","Vertragende beweging — de helling wordt kleiner","Stilstand"],
+        answer:2,explanation:"Een convexe (bolvormige) lijn in een (x,t)-diagram betekent vertraging: de helling wordt steeds kleiner, de snelheid neemt af."},
+      {type:"graph",shape:"horizontal",showReading:true,question:"Wat betekent een horizontale lijn in een (x,t)-diagram?",
+        options:["De snelheid is maximaal","Het voorwerp beweegt gelijkmatig","Het voorwerp staat stil — de plaats verandert niet","Het voorwerp versnelt"],
+        answer:2,explanation:"Een horizontale lijn betekent dat x constant blijft: de plaats verandert niet met de tijd. Het voorwerp staat stil."},
+    ]},
+  { id:4, title:"Afgelegde Afstand", icon:"📏", description:"Afstand aflezen en berekenen",
+    questions:[
+      {type:"text",question:"Wat is de afgelegde afstand?",
+        options:["De absolute eindpositie van het voorwerp","Het verschil tussen twee meetwaarden van de plaats","De gemiddelde snelheid maal de tijd","De totale tijd van de beweging"],
+        answer:1,explanation:"De afgelegde afstand (s) is het verschil tussen twee plaatsmeetwaarden: s = x₂ − x₁. Het symbool voor afgelegde afstand is de letter s."},
+      {type:"text",question:"Met welk symbool wordt de afgelegde afstand aangeduid?",
+        options:["x","t","v","s"],
+        answer:3,explanation:"De afgelegde afstand krijgt het symbool s. De letter x staat voor plaats, t voor tijd, en v voor snelheid."},
+      {type:"text",question:"In een (x,t)-diagram: bij t = 0,5 s is x = 3 cm, bij t = 1,0 s is x = 10 cm. Wat is de afgelegde afstand?",
+        options:["3 cm","7 cm","10 cm","13 cm"],
+        answer:1,explanation:"s = x₂ − x₁ = 10 cm − 3 cm = 7 cm. De afgelegde afstand is altijd het verschil tussen twee plaatswaarden, niet de eindplaats zelf."},
+      {type:"text",question:"Wat is het referentiepunt bij een beweging?",
+        options:["De eindpositie van het voorwerp","Het beginpunt van de beweging — het punt waar x = 0 cm","Het snelste punt van de beweging","Het middelpunt van de baan"],
+        answer:1,explanation:"Het referentiepunt is het punt waar de meting begint: hier is x = 0. Alle plaatswaarden worden gemeten ten opzichte van dit punt."},
+      {type:"text",question:"Een bal beweegt van x = 5 cm naar x = 37 cm. Wat is de afgelegde afstand?",
+        options:["5 cm","32 cm","37 cm","42 cm"],
+        answer:1,explanation:"s = 37 − 5 = 32 cm. Je trekt altijd de beginplaats af van de eindplaats."},
+      {type:"text",question:"Waarom is het handig om de stroboscopische foto met een meetlat te maken?",
+        options:["Zodat de foto mooier wordt","Zodat je de werkelijke afstanden kunt bepalen via de schaal","Zodat de belichtingstijd klopt","Zodat de flitsfrequentie automatisch wordt ingesteld"],
+        answer:1,explanation:"Met een meetlat op de foto kun je de schaal bepalen. Zo weet je wat een afstand op de foto in werkelijkheid betekent, en kun je echte plaatsen en afstanden berekenen."},
+    ]},
+];
+
+const LC=["#f59e0b","#34d399","#60a5fa","#f472b6"];
+const LB=["linear-gradient(135deg,#78350f,#92400e)","linear-gradient(135deg,#064e3b,#065f46)","linear-gradient(135deg,#1e3a8a,#1d4ed8)","linear-gradient(135deg,#831843,#9d174d)"];
+
+function App() {
+  const [screen,setScreen]   = useState("home");
+  const [lvlIdx,setLvlIdx]   = useState(0);
+  const [qIdx,setQIdx]       = useState(0);
+  const [sel,setSel]         = useState(null);
+  const [done,setDone]       = useState(false);
+  const [scores,setScores]   = useState([0,0,0,0]);
+  const [pts,setPts]         = useState(0);
+  const [streak,setStreak]   = useState(0);
+  const [maxStr,setMaxStr]   = useState(0);
+  const [stars,setStars]     = useState([0,0,0,0]);
+  const [shake,setShake]     = useState(false);
+  const [genQuestions,setGenQuestions] = useState(null);
+  const [avatar,setAvatar]   = useState(DEFAULT_AVATAR);
+  const [owned,setOwned]     = useState(DEFAULT_OWNED);
+  const [shopCat,setShopCat] = useState("body");
+  const [buyFlash,setBuyFlash]= useState(null);
+
+  useEffect(()=>{
+    try {
+      const raw=localStorage.getItem("beweging_save");
+      if(raw){
+        const d=JSON.parse(raw);
+        if(d.avatar){const av={...DEFAULT_AVATAR,...d.avatar};if(av.face&&!av.badge){av.badge="badge_none";delete av.face;}setAvatar(av);}
+        if(d.owned){const ow=d.owned.filter(id=>!id.startsWith("face_"));if(!ow.includes("badge_none"))ow.push("badge_none");setOwned(ow);}
+        if(d.pts!==undefined) setPts(d.pts);
+        if(d.stars_51) setStars(d.stars_51);
+      }
+    } catch(e){}
+  },[]);
+
+  const save=(av,ow,p,st)=>{
+    try{
+      const prev=JSON.parse(localStorage.getItem("beweging_save"))||{};
+      localStorage.setItem("beweging_save",JSON.stringify({...prev,avatar:av,owned:ow,pts:p,...(st?{stars_51:st}:{})}));
+    }catch(e){}
+  };
+
+  const addPoints=n=>setPts(p=>{const np=p+n;save(avatar,owned,np);return np;});
+
+  const buyItem=item=>{
+    if(owned.includes(item.id)||pts<item.price) return;
+    const no=[...owned,item.id],np=pts-item.price;
+    setOwned(no);setPts(np);setBuyFlash(item.id);setTimeout(()=>setBuyFlash(null),1200);save(avatar,no,np);
+  };
+  const equipItem=(cat,item)=>{
+    if(!owned.includes(item.id)) return;
+    const na={...avatar,[cat]:item.id};setAvatar(na);save(na,owned,pts);
+  };
+
+  const level=LEVELS[lvlIdx];
+  const questions=(lvlIdx===1&&genQuestions)?genQuestions:level?.questions;
+  const q=questions?.[qIdx], total=questions?.length;
+  const correct=done&&sel===q?.answer;
+  const goHome=()=>{setScreen("home");setSel(null);setDone(false);};
+
+  const handleConfirm=()=>{
+    if(sel===null) return;
+    setDone(true);
+    if(sel===q.answer){
+      const ns=streak+1;setStreak(ns);setMaxStr(s=>Math.max(s,ns));
+      addPoints(10+(ns>2?5:0));
+      setScores(s=>{const n=[...s];n[lvlIdx]++;return n;});
+    } else {setStreak(0);setShake(true);setTimeout(()=>setShake(false),600);}
+  };
+
+  const handleNext=()=>{
+    setSel(null);setDone(false);
+    if(qIdx+1<total){setQIdx(i=>i+1);}
+    else{
+      const pct=scores[lvlIdx]/total;
+      const newStar=pct>=.85?3:pct>=.6?2:pct>=.33?1:0;
+      setStars(s=>{
+        const n=[...s];n[lvlIdx]=newStar;
+        save(avatar,owned,pts,n);
+        return n;
+      });
+      setScreen("result");
+    }
+  };
+
+  const startLevel=i=>{
+    setLvlIdx(i);setQIdx(0);setSel(null);setDone(false);
+    setScores(s=>{const n=[...s];n[i]=0;return n;});
+    if(i===1) setGenQuestions(LEVELS[1].generate());
+    setScreen("question");
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e)",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9",paddingBottom:40}}>
+      <style>{`
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}60%{transform:translateX(8px)}}
+        @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+        .ch:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)!important;transition:all .2s}
+        .ob:hover{border-color:#fbbf24!important;background:rgba(251,191,36,.08)!important}
+        button{font-family:inherit}
+      `}</style>
+
+      {/* HEADER */}
+      <div style={{background:"rgba(255,255,255,.03)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"9px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <a href="index.html" style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,textDecoration:"none"}}>⚡ Home</a>
+          {screen!=="home"&&<button onClick={goHome} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12}}>← Levels</button>}
+          <span style={{fontSize:20}}>📸</span>
+          <div><div style={{fontWeight:700,fontSize:13}}>BewegingsGame</div><div style={{fontSize:10,color:"#64748b"}}>2 HAVO · §5.1</div></div>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#fbbf24"}}>{pts}</div><div style={{fontSize:10,color:"#64748b"}}>punten</div></div>
+          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#f472b6"}}>🔥{streak}</div><div style={{fontSize:10,color:"#64748b"}}>streak</div></div>
+          <button onClick={()=>setScreen("shop")} style={{background:"none",border:"none",cursor:"pointer",padding:2}}><AvatarDisplay avatar={avatar} size={36}/></button>
+        </div>
+      </div>
+
+      <div style={{maxWidth:540,margin:"0 auto",padding:"20px 14px"}}>
+
+        {/* HOME SCREEN */}
+        {screen==="home"&&(
+          <div style={{animation:"fadeIn .4s ease"}}>
+            <div style={{textAlign:"center",marginBottom:26}}>
+              <div style={{fontSize:44,marginBottom:6}}>📸</div>
+              <h1 style={{fontSize:23,fontWeight:800,margin:0,background:"linear-gradient(90deg,#f59e0b,#34d399)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Bewegingen Vastleggen</h1>
+              <p style={{color:"#94a3b8",marginTop:8,fontSize:13}}>Kies een level en versla alle opdrachten!</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+              {LEVELS.map((l,i)=>(
+                <div key={i} className="ch" onClick={()=>startLevel(i)} style={{background:LB[i],borderRadius:16,padding:"17px 13px",cursor:"pointer",border:`1px solid ${LC[i]}40`,transition:"all .2s",position:"relative",overflow:"hidden"}}>
+                  <div style={{fontSize:28,marginBottom:5}}>{l.icon}</div>
+                  <div style={{fontWeight:700,fontSize:14}}>{l.title}</div>
+                  <div style={{fontSize:11,color:"rgba(255,255,255,.65)",marginTop:3}}>{l.description}</div>
+                  <div style={{marginTop:8,display:"flex",gap:2}}>{[1,2,3].map(s=><span key={s} style={{fontSize:13,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
+                  <div style={{position:"absolute",top:9,right:9,background:"rgba(0,0,0,.3)",borderRadius:7,padding:"2px 7px",fontSize:10,color:LC[i]}}>{i===1?6:l.questions.length} vr.</div>
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:20,background:"rgba(255,255,255,.03)",borderRadius:12,padding:14,border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{fontSize:11,color:"#64748b",marginBottom:8}}>📚 LEERDOELEN</div>
+              {[
+                "Uitleggen hoe je beweging vastlegt via video of stroboscopie",
+                "Tijdsinterval en schaal gebruiken bij analyse",
+                "Een plaats-tijdtabel invullen",
+                "Aflezen uit een (x,t)-diagram",
+                "Afgelegde afstand berekenen"
+              ].map((d,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0",fontSize:13,color:"#cbd5e1"}}><span style={{color:LC[i%4]}}>▸</span> {d}</div>
+              ))}
+            </div>
+            <button onClick={()=>setScreen("shop")} className="ch" style={{marginTop:12,width:"100%",padding:"14px 16px",background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",gap:14,transition:"all .2s"}}>
+              <AvatarDisplay avatar={avatar} size={52}/>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontWeight:700,fontSize:14,color:"#f1f5f9"}}>🛍️ Avatar Winkel</div>
+                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Geef je punten uit aan items!</div>
+                <div style={{fontSize:12,color:"#fbbf24",marginTop:2}}>💰 {pts} punten beschikbaar</div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* QUESTION SCREEN */}
+        {screen==="question"&&q&&(
+          <div style={{animation:"fadeIn .3s ease"}}>
+            <div style={{marginBottom:16}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:12,color:"#64748b"}}>
+                <span>{level.icon} {level.title}</span><span>Vraag {qIdx+1} / {total}</span>
+              </div>
+              <div style={{height:5,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${((qIdx+(done?1:0))/total)*100}%`,transition:"width .5s ease"}}/>
+              </div>
+            </div>
+
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:16,padding:16,border:`1px solid ${LC[lvlIdx]}30`,marginBottom:12,animation:shake?"shake .6s ease":"none"}}>
+              <div style={{fontSize:14,fontWeight:600,lineHeight:1.55,marginBottom:10}}>{q.question}</div>
+
+              {/* Animaties */}
+              {q.type==="animation"&&<StroboAnimation type={q.animType}/>}
+
+              {/* Grafieken */}
+              {q.type==="graph"&&<PlaatsTijdGrafiek shape={q.shape} showReading={done&&q.showReading}/>}
+
+              {/* Gegeven-blok */}
+              {(q.type==="calc"||q.type==="strobo")&&q.given&&(
+                <div style={{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.2)",borderRadius:10,padding:12,marginBottom:8}}>
+                  <div style={{fontSize:11,color:"#fbbf24",marginBottom:6}}>📋 GEGEVEN</div>
+                  {q.given.map(([k,v])=><div key={k} style={{fontSize:14,fontFamily:"monospace",color:"#e2e8f0"}}>{k} = {v}</div>)}
+                </div>
+              )}
+            </div>
+
+            <div style={{display:"grid",gap:9,marginBottom:12}}>
+              {q.options.map((opt,i)=>{
+                let bg="rgba(255,255,255,.04)",border="rgba(255,255,255,.1)",col="#e2e8f0";
+                if(sel===i&&!done){bg="rgba(251,191,36,.12)";border="#fbbf24";}
+                if(done){if(i===q.answer){bg="rgba(52,211,153,.12)";border="#34d399";col="#34d399";}else if(i===sel&&i!==q.answer){bg="rgba(239,68,68,.12)";border="#ef4444";col="#ef4444";}}
+                return(
+                  <button key={i} className={!done?"ob":""} onClick={()=>{if(!done)setSel(i);}}
+                    style={{background:bg,border:`1.5px solid ${border}`,borderRadius:12,padding:"12px 14px",color:col,fontSize:14,fontWeight:500,cursor:done?"default":"pointer",textAlign:"left",transition:"all .2s",display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{minWidth:22,height:22,borderRadius:6,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700}}>
+                      {done?(i===q.answer?"✓":i===sel?"✗":String.fromCharCode(65+i)):String.fromCharCode(65+i)}
+                    </span>{opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            {done&&(
+              <div style={{background:correct?"rgba(52,211,153,.08)":"rgba(239,68,68,.08)",border:`1px solid ${correct?"#34d399":"#ef4444"}40`,borderRadius:12,padding:14,marginBottom:12,animation:"popIn .3s ease"}}>
+                <div style={{fontSize:13,fontWeight:600,color:correct?"#34d399":"#f87171",marginBottom:4}}>
+                  {correct?"✅ Goed gedaan!":"❌ Niet helemaal..."}
+                  {correct&&streak>2&&<span style={{marginLeft:8,color:"#fbbf24"}}>🔥 {streak}x streak! +5</span>}
+                </div>
+                <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.6}}>💡 {q.explanation}</div>
+              </div>
+            )}
+
+            {!done?(
+              <button onClick={handleConfirm} disabled={sel===null} style={{width:"100%",padding:14,background:sel!==null?`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`:"rgba(255,255,255,.05)",border:"none",borderRadius:12,color:sel!==null?"#0a0f1e":"#475569",fontWeight:700,fontSize:15,cursor:sel!==null?"pointer":"default",transition:"all .2s"}}>
+                Controleer →
+              </button>
+            ):(
+              <button onClick={handleNext} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+                {qIdx+1<total?"Volgende vraag →":"Resultaat bekijken 🏆"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* RESULT SCREEN */}
+        {screen==="result"&&(
+          <div style={{animation:"fadeIn .4s ease",textAlign:"center"}}>
+            <div style={{fontSize:52,marginBottom:6}}>{scores[lvlIdx]===total?"🏆":scores[lvlIdx]>=total*.6?"🎉":"💪"}</div>
+            <h2 style={{fontSize:21,fontWeight:800,margin:"0 0 4px"}}>{level.title} — Klaar!</h2>
+            <div style={{fontSize:14,color:"#94a3b8",marginBottom:20}}>{scores[lvlIdx]} van {total} goed beantwoord</div>
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:20}}>
+              {[1,2,3].map(s=><span key={s} style={{fontSize:34,opacity:stars[lvlIdx]>=s?1:.2,animation:stars[lvlIdx]>=s?`popIn .4s ease ${s*.15}s both`:"none"}}>⭐</span>)}
+            </div>
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:14,marginBottom:14,border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
+                <span style={{fontSize:13,color:"#94a3b8"}}>Score</span>
+                <span style={{fontSize:13,fontWeight:700,color:LC[lvlIdx]}}>{Math.round((scores[lvlIdx]/total)*100)}%</span>
+              </div>
+              <div style={{height:7,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${(scores[lvlIdx]/total)*100}%`,transition:"width 1s ease"}}/>
+              </div>
+            </div>
+            <div style={{background:"rgba(251,191,36,.06)",borderRadius:12,padding:12,marginBottom:14,border:"1px solid rgba(251,191,36,.15)"}}>
+              <div style={{fontSize:13,color:"#fbbf24"}}>🔥 Langste streak: {maxStr}x &nbsp;|&nbsp; 🎯 Totaal: {pts} punten</div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+              <button onClick={()=>startLevel(lvlIdx)} style={{padding:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>🔄 Opnieuw</button>
+              <button onClick={goHome} style={{padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,cursor:"pointer",fontSize:14}}>🏠 Levels</button>
+            </div>
+            <button onClick={()=>setScreen("shop")} style={{width:"100%",padding:13,background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
+              <AvatarDisplay avatar={avatar} size={32}/> 🛍️ Naar de winkel
+            </button>
+            {lvlIdx<LEVELS.length-1&&(
+              <button onClick={()=>startLevel(lvlIdx+1)} style={{width:"100%",padding:14,background:LB[lvlIdx+1],border:`1px solid ${LC[lvlIdx+1]}40`,borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14}}>
+                Volgend level: {LEVELS[lvlIdx+1].icon} {LEVELS[lvlIdx+1].title} →
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* SHOP SCREEN */}
+        {screen==="shop"&&(
+          <div style={{animation:"fadeIn .35s ease"}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{display:"flex",justifyContent:"center",marginBottom:10}}><AvatarDisplay avatar={avatar} size={90}/></div>
+              <div style={{fontSize:18,fontWeight:800}}>Jouw Avatar</div>
+              <div style={{fontSize:13,color:"#94a3b8",marginTop:2}}>💰 {pts} punten beschikbaar</div>
+            </div>
+            <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:4}}>
+              {Object.entries(CAT_LABELS).map(([cat,label])=>(
+                <button key={cat} onClick={()=>setShopCat(cat)} style={{flexShrink:0,padding:"7px 13px",borderRadius:20,border:`1.5px solid ${shopCat===cat?"#60a5fa":"rgba(255,255,255,.1)"}`,background:shopCat===cat?"rgba(96,165,250,.15)":"rgba(255,255,255,.04)",color:shopCat===cat?"#60a5fa":"#94a3b8",fontWeight:600,fontSize:12,cursor:"pointer",transition:"all .15s"}}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              {SHOP[shopCat].map(item=>{
+                const isOwned=owned.includes(item.id),isEquipped=avatar[shopCat]===item.id,canAfford=pts>=item.price,justBought=buyFlash===item.id;
+                return(
+                  <div key={item.id} onClick={()=>isOwned?equipItem(shopCat,item):buyItem(item)} className="ch"
+                    style={{background:isEquipped?"rgba(96,165,250,.15)":justBought?"rgba(52,211,153,.15)":"rgba(255,255,255,.04)",
+                      border:`1.5px solid ${isEquipped?"#60a5fa":justBought?"#34d399":isOwned?"rgba(255,255,255,.18)":"rgba(255,255,255,.08)"}`,
+                      borderRadius:14,padding:"14px 12px",cursor:(!isOwned&&!canAfford)?"not-allowed":"pointer",
+                      opacity:(!isOwned&&!canAfford)?.45:1,transition:"all .2s",textAlign:"center",position:"relative"}}>
+                    {shopCat==="bg"
+                      ?<div style={{width:40,height:40,borderRadius:"50%",background:item.color,margin:"0 auto 8px",border:"2px solid rgba(255,255,255,.15)"}}/>
+                      :<div style={{fontSize:34,marginBottom:6,lineHeight:1}}>{item.emoji||"−"}</div>
+                    }
+                    <div style={{fontWeight:600,fontSize:13,color:"#f1f5f9"}}>{item.name}</div>
+                    <div style={{marginTop:5,fontSize:12}}>
+                      {isEquipped?<span style={{color:"#60a5fa",fontWeight:700}}>✓ Aan</span>
+                      :isOwned?<span style={{color:"#34d399",fontSize:11}}>In bezit — klik om aan te doen</span>
+                      :justBought?<span style={{color:"#34d399",fontWeight:700}}>✓ Gekocht!</span>
+                      :<span style={{color:canAfford?"#fbbf24":"#ef4444",fontWeight:600}}>💰 {item.price} punten</span>}
+                    </div>
+                    {isEquipped&&<div style={{position:"absolute",top:8,right:8,width:10,height:10,borderRadius:"50%",background:"#60a5fa"}}/>}
+                  </div>
+                );
+              })}
+            </div>
+            <button onClick={goHome} style={{width:"100%",padding:13,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>
+              ← Terug naar levels
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
-    <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:20px">🎞️</span>
-      <div>
-        <div style="font-weight:600;font-size:13px">Tijdopnamen interpreteren</div>
-        <div style="font-size:12px;color:#94a3b8;margin-top:2px">Bewegingsrichting en snelheid uit foto afleiden</div>
-      </div>
-    </div>
-  </div>
+  );
+}
 
-  <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:14px;margin-bottom:28px;font-size:13px;color:#fbbf24;animation:pulse 2s ease infinite">
-    ⏳ Komt binnenkort beschikbaar
-  </div>
-
-  <a href="index.html" style="display:inline-block;padding:13px 28px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#e2e8f0;font-weight:600;font-size:14px;text-decoration:none">
-    ← Terug naar overzicht
-  </a>
-</div>
-
-<script>
-try{
-  const save=JSON.parse(localStorage.getItem("beweging_save"))||{};
-  document.getElementById("hdr-pts").textContent=save.pts||0;
-}catch(e){}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
 </body>
 </html>
