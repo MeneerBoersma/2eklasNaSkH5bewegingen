@@ -10,7 +10,7 @@
   <script src="shop-data.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#0a0f1e;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif}
+    body{min-height:100vh;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif}
     ::-webkit-scrollbar{width:6px;height:6px}
     ::-webkit-scrollbar-track{background:rgba(255,255,255,.05)}
     ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
@@ -29,7 +29,7 @@ function AvatarDisplay({ avatar, size=64 }) {
 }
 
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-const fmt  = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".",",");
+const fmt  = n => { const r = Math.round(n * 10) / 10; return Number.isInteger(r) ? String(r) : r.toFixed(1).replace(".",","); };
 
 function makeOptions(correct, wrongs) {
   const unique = [...new Set(wrongs.filter(w=>w!==correct))];
@@ -237,7 +237,7 @@ function App() {
       const raw=localStorage.getItem("beweging_save");
       if(raw){
         const d=JSON.parse(raw);
-        if(d.avatar){const av={...DEFAULT_AVATAR,...d.avatar};if(av.face&&!av.badge){av.badge="badge_none";delete av.face;}setAvatar(av);}
+        if(d.avatar){const av={...DEFAULT_AVATAR,...d.avatar};if(av.face&&!av.badge){av.badge="badge_none";delete av.face;}setAvatar(av);applyAppBackground(av);}
         if(d.owned){const ow=d.owned.filter(id=>!id.startsWith("face_"));if(!ow.includes("badge_none"))ow.push("badge_none");setOwned(ow);}
         if(d.pts!==undefined) setPts(d.pts);
         if(d.stars_54) setStars(d.stars_54);
@@ -262,6 +262,7 @@ function App() {
   const equipItem=(cat,item)=>{
     if(!owned.includes(item.id)) return;
     const na={...avatar,[cat]:item.id};setAvatar(na);save(na,owned,pts);
+    if(cat==="appbg") applyAppBackground(na);
   };
 
   const level=LEVELS[lvlIdx];
@@ -303,7 +304,7 @@ function App() {
   };
 
   return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#0a0f1e,#111827 60%,#0a0f1e)",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9",paddingBottom:40}}>
+    <div style={{minHeight:"100vh",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9",paddingBottom:40}}>
       <style>{`
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}60%{transform:translateX(8px)}}
@@ -486,9 +487,11 @@ function App() {
                       border:`1.5px solid ${isEquipped?"#60a5fa":justBought?"#34d399":isOwned?"rgba(255,255,255,.18)":"rgba(255,255,255,.08)"}`,
                       borderRadius:14,padding:"14px 12px",cursor:(!isOwned&&!canAfford)?"not-allowed":"pointer",
                       opacity:(!isOwned&&!canAfford)?.45:1,transition:"all .2s",textAlign:"center",position:"relative"}}>
-                    {shopCat==="bg"
-                      ?<div style={{width:40,height:40,borderRadius:"50%",background:item.color,margin:"0 auto 8px",border:"2px solid rgba(255,255,255,.15)"}}/>
-                      :<div style={{fontSize:34,marginBottom:6,lineHeight:1}}>{item.emoji||"−"}</div>
+                    {shopCat==="appbg"
+                      ?<div style={{width:84,height:28,borderRadius:7,background:item.css||item.color,margin:"0 auto 8px",border:"1px solid rgba(255,255,255,.15)"}}/>
+                      :shopCat==="bg"
+                        ?<div style={{width:40,height:40,borderRadius:"50%",background:item.color,margin:"0 auto 8px",border:"2px solid rgba(255,255,255,.15)"}}/>
+                        :<div style={{fontSize:34,marginBottom:6,lineHeight:1}}>{item.emoji||" "}</div>
                     }
                     <div style={{fontWeight:600,fontSize:13,color:"#f1f5f9"}}>{item.name}</div>
                     <div style={{marginTop:5,fontSize:12}}>
