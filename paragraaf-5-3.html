@@ -7,6 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="shop-data.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0a0f1e;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif}
@@ -20,78 +21,12 @@
 <script type="text/babel">
 const { useState, useEffect } = React;
 
-// ─── SHOP DATA ────────────────────────────────────────────────────────────────
-const SHOP = {
-  body: [
-    { id:"body_student", emoji:"🧑‍🎓", name:"Student",   price:0,  unlocked:true },
-    { id:"body_ninja",   emoji:"🥷",   name:"Ninja",     price:80  },
-    { id:"body_robot",   emoji:"🤖",   name:"Robot",     price:120 },
-    { id:"body_astro",   emoji:"👨‍🚀",  name:"Astronaut", price:200 },
-    { id:"body_alien",   emoji:"👽",   name:"Alien",     price:160 },
-    { id:"body_zombie",  emoji:"🧟",   name:"Zombie",    price:100 },
-  ],
-  hat: [
-    { id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0,  unlocked:true },
-    { id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:30  },
-    { id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:50  },
-    { id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:100 },
-    { id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:70  },
-    { id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:60  },
-    { id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:40  },
-  ],
-  badge: [
-    { id:"badge_none",   emoji:"",   name:"Geen badge", price:0,   unlocked:true },
-    { id:"badge_star",   emoji:"⭐",  name:"Ster",       price:30  },
-    { id:"badge_trophy", emoji:"🏆",  name:"Trofee",     price:80  },
-    { id:"badge_bolt",   emoji:"⚡",  name:"Bliksem",    price:40  },
-    { id:"badge_medal",  emoji:"🏅",  name:"Medaille",   price:60  },
-    { id:"badge_fire",   emoji:"🔥",  name:"Vuur",       price:50  },
-    { id:"badge_gem",    emoji:"💎",  name:"Diamant",    price:120 },
-    { id:"badge_rocket", emoji:"🚀",  name:"Raket",      price:90  },
-  ],
-  bg: [
-    { id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",          name:"Standaard", price:0,   unlocked:true },
-    { id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",          name:"Goud",      price:60  },
-    { id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",          name:"Ruimte",    price:50  },
-    { id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",          name:"Natuur",    price:40  },
-    { id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",          name:"Roze",      price:40  },
-    { id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",          name:"Vuur",      price:70  },
-    { id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)",  name:"Regenboog", price:160 },
-  ],
-};
-
-const CAT_LABELS = { body:"🧍 Karakter", hat:"🎩 Hoeden", badge:"🏅 Badges", bg:"🎨 Achtergrond" };
-const DEFAULT_AVATAR = { body:"body_student", hat:"hat_none", badge:"badge_none", bg:"bg_dark" };
-const DEFAULT_OWNED  = ["body_student","hat_none","badge_none","bg_dark"];
+// SHOP, CAT_LABELS, DEFAULT_AVATAR, DEFAULT_OWNED → geladen via shop-data.js
 
 // ─── AVATAR ───────────────────────────────────────────────────────────────────
+// Avatar-tekenlogica zit in shop-data.js → renderAvatarHTML()
 function AvatarDisplay({ avatar, size=64 }) {
-  const body  = SHOP.body.find(x => x.id===avatar.body)  || SHOP.body[0];
-  const hat   = SHOP.hat.find(x  => x.id===avatar.hat)   || SHOP.hat[0];
-  const badge = SHOP.badge.find(x=> x.id===avatar.badge) || SHOP.badge[0];
-  const bg    = SHOP.bg.find(x   => x.id===avatar.bg)    || SHOP.bg[0];
-  const bodyFs=Math.round(size*.46), hatFs=Math.round(size*.28);
-  const badgeFs=Math.round(size*.24), badgeSz=Math.round(size*.36);
-  return (
-    <div style={{width:size,height:size,borderRadius:16,background:bg.color,
-      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      position:"relative",flexShrink:0,border:"2px solid rgba(255,255,255,.15)",
-      boxShadow:"0 4px 20px rgba(0,0,0,.4)",overflow:"hidden"}}>
-      <div style={{height:Math.round(size*.28),display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-        <span style={{fontSize:hatFs,lineHeight:1}}>{hat.emoji||" "}</span>
-      </div>
-      <div style={{height:Math.round(size*.52),display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <span style={{fontSize:bodyFs,lineHeight:1}}>{body.emoji}</span>
-      </div>
-      {badge.emoji&&(
-        <div style={{position:"absolute",bottom:4,right:4,width:badgeSz,height:badgeSz,borderRadius:"50%",
-          background:"rgba(0,0,0,.45)",border:"1.5px solid rgba(255,255,255,.25)",
-          display:"flex",alignItems:"center",justifyContent:"center",fontSize:badgeFs,lineHeight:1}}>
-          {badge.emoji}
-        </div>
-      )}
-    </div>
-  );
+  return <span dangerouslySetInnerHTML={{__html: renderAvatarHTML(avatar, size)}} style={{display:"contents"}}/>;
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────

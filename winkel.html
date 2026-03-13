@@ -30,11 +30,7 @@
   <!-- Avatar preview -->
   <div style="text-align:center;margin-bottom:22px">
     <div style="display:flex;justify-content:center;margin-bottom:10px">
-      <div id="avatar-preview" style="width:90px;height:90px;border-radius:16px;background:linear-gradient(160deg,#0f172a,#1e293b);border:2px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;position:relative">
-        <div id="av-hat"  style="height:25px;display:flex;align-items:flex-end;justify-content:center;font-size:26px;line-height:1"></div>
-        <div id="av-body" style="height:47px;display:flex;align-items:center;justify-content:center;font-size:42px;line-height:1">🧑‍🎓</div>
-        <div id="av-badge" style="position:absolute;bottom:4px;right:4px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.25);display:none;align-items:center;justify-content:center;font-size:20px;line-height:1"></div>
-      </div>
+      <div id="avatar-preview"></div>
     </div>
     <div style="font-size:18px;font-weight:800">Jouw Avatar</div>
     <div id="pts-label" style="font-size:13px;color:#94a3b8;margin-top:2px">💰 0 punten beschikbaar</div>
@@ -51,70 +47,24 @@
   </a>
 </div>
 
+<script src="shop-data.js"></script>
 <script>
-const SHOP = {
-  body:[
-    {id:"body_student",emoji:"🧑‍🎓",name:"Student",   price:0, unlocked:true},
-    {id:"body_ninja",  emoji:"🥷",  name:"Ninja",     price:80},
-    {id:"body_robot",  emoji:"🤖",  name:"Robot",     price:120},
-    {id:"body_astro",  emoji:"👨‍🚀", name:"Astronaut", price:200},
-    {id:"body_alien",  emoji:"👽",  name:"Alien",     price:160},
-    {id:"body_zombie", emoji:"🧟",  name:"Zombie",    price:100},
-  ],
-  hat:[
-    {id:"hat_none",   emoji:"",   name:"Geen hoed",     price:0, unlocked:true},
-    {id:"hat_cap",    emoji:"🧢",  name:"Pet",           price:30},
-    {id:"hat_mortar", emoji:"🎓",  name:"Afstudeerhoed", price:50},
-    {id:"hat_crown",  emoji:"👑",  name:"Kroon",         price:100},
-    {id:"hat_cowboy", emoji:"👒",  name:"Zomerhoed",     price:70},
-    {id:"hat_tophat", emoji:"🎩",  name:"Hoge hoed",     price:60},
-    {id:"hat_helmet", emoji:"🪖",  name:"Legerhelm",     price:40},
-  ],
-  badge:[
-    {id:"badge_none",  emoji:"",   name:"Geen badge", price:0, unlocked:true},
-    {id:"badge_star",  emoji:"⭐",  name:"Ster",       price:30},
-    {id:"badge_trophy",emoji:"🏆",  name:"Trofee",     price:80},
-    {id:"badge_bolt",  emoji:"⚡",  name:"Bliksem",    price:40},
-    {id:"badge_medal", emoji:"🏅",  name:"Medaille",   price:60},
-    {id:"badge_fire",  emoji:"🔥",  name:"Vuur",       price:50},
-    {id:"badge_gem",   emoji:"💎",  name:"Diamant",    price:120},
-    {id:"badge_rocket",emoji:"🚀",  name:"Raket",      price:90},
-  ],
-  bg:[
-    {id:"bg_dark",    color:"linear-gradient(160deg,#0f172a,#1e293b)",         name:"Standaard",  price:0, unlocked:true},
-    {id:"bg_gold",    color:"linear-gradient(160deg,#78350f,#d97706)",         name:"Goud",       price:60},
-    {id:"bg_space",   color:"linear-gradient(160deg,#0f172a,#1e3a8a)",         name:"Ruimte",     price:50},
-    {id:"bg_nature",  color:"linear-gradient(160deg,#064e3b,#10b981)",         name:"Natuur",     price:40},
-    {id:"bg_pink",    color:"linear-gradient(160deg,#831843,#ec4899)",         name:"Roze",       price:40},
-    {id:"bg_fire",    color:"linear-gradient(160deg,#7f1d1d,#ef4444)",         name:"Vuur",       price:70},
-    {id:"bg_rainbow", color:"linear-gradient(160deg,#7c3aed,#2563eb,#059669)", name:"Regenboog",  price:160},
-  ],
-};
-const CAT_LABELS={body:"🧍 Karakter",hat:"🎩 Hoeden",badge:"🏅 Badges",bg:"🎨 Achtergrond"};
+// SHOP, CAT_LABELS, DEFAULT_AVATAR, DEFAULT_OWNED → geladen via shop-data.js
 
 let save={}, currentCat="body";
 
 function loadSave(){
   try{save=JSON.parse(localStorage.getItem("beweging_save"))||{};}catch(e){save={};}
-  if(!save.avatar) save.avatar={body:"body_student",hat:"hat_none",badge:"badge_none",bg:"bg_dark"};
-  if(!save.owned)  save.owned=["body_student","hat_none","badge_none","bg_dark"];
+  if(!save.avatar) save.avatar={...DEFAULT_AVATAR};
+  if(!save.owned)  save.owned=[...DEFAULT_OWNED];
   if(!save.pts)    save.pts=0;
 }
 function persist(){ try{localStorage.setItem("beweging_save",JSON.stringify(save));}catch(e){} }
 
 function renderAvatar(){
-  const av=save.avatar;
-  const body =SHOP.body.find(x=>x.id===av.body)||SHOP.body[0];
-  const hat  =SHOP.hat.find(x=>x.id===av.hat)||SHOP.hat[0];
-  const badge=SHOP.badge.find(x=>x.id===av.badge)||SHOP.badge[0];
-  const bg   =SHOP.bg.find(x=>x.id===av.bg)||SHOP.bg[0];
-  document.getElementById("avatar-preview").style.background=bg.color;
-  document.getElementById("av-hat").textContent=hat.emoji;
-  document.getElementById("av-body").textContent=body.emoji;
-  const bdgEl=document.getElementById("av-badge");
-  bdgEl.textContent=badge.emoji;bdgEl.style.display=badge.emoji?"flex":"none";
-  document.getElementById("hdr-pts").textContent=save.pts;
-  document.getElementById("pts-label").textContent="💰 "+save.pts+" punten beschikbaar";
+  document.getElementById("avatar-preview").innerHTML = renderAvatarHTML(save.avatar, 90);
+  document.getElementById("hdr-pts").textContent = save.pts;
+  document.getElementById("pts-label").textContent = "💰 " + save.pts + " punten beschikbaar";
 }
 
 function renderTabs(){
