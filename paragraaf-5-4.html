@@ -49,8 +49,8 @@ function RemwegGrafiek({ showPoint }) {
   const my=s=>PT+h-(s/sMax)*h;
   const pathData="M"+[0,20,40,60,80,100,120].map(v=>`${mx(v).toFixed(1)},${my(remweg(v)).toFixed(1)}`).join("L");
   return (
-    <div style={{display:"flex",justifyContent:"center",margin:"10px 0"}}>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:12,border:"1px solid #334155",display:"block"}}>
+    <div style={{display:"flex",justifyContent:"center",margin:"10px 0",maxHeight:220,overflow:"hidden"}}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{background:"linear-gradient(135deg,#0f172a,#1e293b)",borderRadius:12,border:"1px solid #334155",display:"block",maxHeight:220}}>
         {[20,40,60,80,100].map(s=>(
           <g key={s}>
             <line x1={PL} y1={my(s)} x2={PL+w} y2={my(s)} stroke="#1e3a5f" strokeWidth="1" strokeDasharray="2,4"/>
@@ -304,125 +304,194 @@ function App() {
   };
 
   return (
-    <div style={{minHeight:"100vh",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9",paddingBottom:40}}>
+    <div style={{minHeight:"100vh",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#f1f5f9"}}>
       <style>{`
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}60%{transform:translateX(8px)}}
         @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-        .ch:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5)!important;transition:all .2s}
+        .ch:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4)!important;transition:all .2s}
         .ob:hover{border-color:#fbbf24!important;background:rgba(251,191,36,.08)!important}
         button{font-family:inherit}
+        .sidebar{width:220px;flex-shrink:0;display:flex;flex-direction:column;padding:20px 16px;border-right:1px solid rgba(255,255,255,.07);height:calc(100vh - 49px);position:sticky;top:49px;overflow-y:auto}
+        .main-content{flex:1;min-width:0;padding:24px 40px;overflow-y:auto}
+        .levels-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .options-grid{display:grid;gap:9px;margin-bottom:12px}
+        .q-layout{display:flex;gap:20px;align-items:flex-start}
+        .q-left{flex:1;min-width:0}
+        .q-right{width:340px;flex-shrink:0}
+        @media(max-width:900px){
+          .q-layout{flex-direction:column}
+          .q-right{width:100%}
+        }
+        @media(max-width:700px){
+          .sidebar{display:none!important}
+          .main-content{padding:16px 14px}
+        }
+        @media(max-width:480px){
+          .levels-grid{grid-template-columns:1fr}
+        }
       `}</style>
 
-      <div style={{background:"rgba(255,255,255,.03)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"9px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <a href="index.html" style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,textDecoration:"none"}}>⚡ Home</a>
-          {screen!=="home"&&<button onClick={goHome} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12}}>← Levels</button>}
-          <span style={{fontSize:20}}>🛑</span>
-          <div><div style={{fontWeight:700,fontSize:13}}>BewegingsGame</div><div style={{fontSize:10,color:"#64748b"}}>2 HAVO · §5.4</div></div>
-        </div>
-        <div style={{display:"flex",gap:10,alignItems:"center"}}>
-          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#fbbf24"}}>{pts}</div><div style={{fontSize:10,color:"#64748b"}}>punten</div></div>
-          <div style={{textAlign:"center"}}><div style={{fontSize:16,fontWeight:700,color:"#f472b6"}}>🔥{streak}</div><div style={{fontSize:10,color:"#64748b"}}>streak</div></div>
-          <button onClick={()=>setScreen("shop")} style={{background:"none",border:"none",cursor:"pointer",padding:2}}><AvatarDisplay avatar={avatar} size={36}/></button>
-        </div>
+      {/* Topbar */}
+      <div style={{background:"rgba(255,255,255,.03)",borderBottom:"1px solid rgba(255,255,255,.07)",padding:"9px 16px",display:"flex",alignItems:"center",gap:10,position:"sticky",top:0,zIndex:10,backdropFilter:"blur(8px)"}}>
+        <a href="index.html" style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12,textDecoration:"none"}}>⚡ Home</a>
+        {screen!=="home"&&<button onClick={goHome} style={{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",color:"#94a3b8",cursor:"pointer",fontSize:12}}>← Levels</button>}
+        <span style={{fontSize:18}}>🛑</span>
+        <div style={{flex:1}}><span style={{fontWeight:700,fontSize:13}}>Remmen en Botsen</span><span style={{fontSize:11,color:"#64748b",marginLeft:8}}>2 HAVO · §5.4</span></div>
       </div>
 
-      <div style={{maxWidth:540,margin:"0 auto",padding:"20px 14px"}}>
+      {/* Sidebar + content */}
+      {(()=>{
+        const totalStars=stars.reduce((a,b)=>a+b,0), maxStars=stars.length*3;
+        return (
+          <div style={{display:"flex",minHeight:"calc(100vh - 49px)"}}>
+            {/* Sidebar */}
+            <div className="sidebar">
+              <div style={{textAlign:"center",marginBottom:20,padding:"16px 12px",background:"rgba(255,255,255,.04)",borderRadius:16,border:"1px solid rgba(255,255,255,.07)"}}>
+                <button onClick={()=>setScreen("shop")} style={{background:"none",border:"none",cursor:"pointer",display:"block",margin:"0 auto 10px"}}>
+                  <AvatarDisplay avatar={avatar} size={72}/>
+                </button>
+                <div style={{fontWeight:700,fontSize:13,marginBottom:2}}>Jouw avatar</div>
+                <div style={{fontSize:11,color:"#94a3b8",marginBottom:10}}>klik om aan te passen</div>
+                <div style={{display:"flex",justifyContent:"center",gap:16}}>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:18,fontWeight:800,color:"#fbbf24"}}>{pts}</div>
+                    <div style={{fontSize:10,color:"#64748b"}}>punten</div>
+                  </div>
+                  <div style={{width:1,background:"rgba(255,255,255,.07)"}}/>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:18,fontWeight:800,color:"#f472b6"}}>🔥{streak}</div>
+                    <div style={{fontSize:10,color:"#64748b"}}>streak</div>
+                  </div>
+                </div>
+              </div>
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:10,color:"#64748b",letterSpacing:1,marginBottom:10,fontWeight:700}}>LEVELS</div>
+                {LEVELS.map((l,i)=>(
+                  <div key={i} onClick={()=>startLevel(i)} className="ch"
+                    style={{display:"flex",alignItems:"center",gap:10,padding:"10px 11px",borderRadius:12,marginBottom:6,
+                      background:screen==="question"&&lvlIdx===i?LB[i]:"rgba(255,255,255,.03)",
+                      border:`1px solid ${screen==="question"&&lvlIdx===i?LC[i]+"60":"rgba(255,255,255,.06)"}`,
+                      cursor:"pointer",transition:"all .2s"}}>
+                    <span style={{fontSize:18,flexShrink:0}}>{l.icon}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:600,color:screen==="question"&&lvlIdx===i?"#f1f5f9":"#cbd5e1",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.title}</div>
+                      <div style={{display:"flex",gap:1,marginTop:2}}>{[1,2,3].map(s=><span key={s} style={{fontSize:10,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{marginTop:"auto",padding:"12px",background:"rgba(255,255,255,.03)",borderRadius:12,border:"1px solid rgba(255,255,255,.06)"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:7}}>
+                  <div style={{fontSize:10,color:"#64748b",fontWeight:700}}>TOTAAL STERREN</div>
+                  <span style={{fontWeight:700,color:"#fbbf24",fontSize:13}}>{totalStars}/{maxStars}</span>
+                </div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:2,marginBottom:8}}>
+                  {[...Array(maxStars)].map((_,i)=><span key={i} style={{fontSize:14,opacity:i<totalStars?1:.2}}>⭐</span>)}
+                </div>
+                <div style={{height:5,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                  <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#fbbf24,#f59e0b)",width:`${(totalStars/maxStars)*100}%`,transition:"width .6s ease"}}/>
+                </div>
+              </div>
+              <button onClick={()=>setScreen("shop")} className="ch" style={{marginTop:10,width:"100%",padding:"11px",background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.25)",borderRadius:12,color:"#93c5fd",fontWeight:600,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+                🛍️ Avatar Winkel
+              </button>
+            </div>
+            {/* Main content */}
+            <div className="main-content">
 
         {screen==="home"&&(
           <div style={{animation:"fadeIn .4s ease"}}>
-            <div style={{textAlign:"center",marginBottom:26}}>
-              <div style={{fontSize:44,marginBottom:6}}>🛑</div>
-              <h1 style={{fontSize:23,fontWeight:800,margin:0,background:"linear-gradient(90deg,#ef4444,#f59e0b)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Remmen en Botsen</h1>
-              <p style={{color:"#94a3b8",marginTop:8,fontSize:13}}>Kies een level en versla alle opdrachten!</p>
+            <div style={{marginBottom:24}}>
+              <h1 style={{fontSize:26,fontWeight:800,margin:"0 0 6px",background:"linear-gradient(90deg,#ef4444,#f59e0b)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Remmen en Botsen</h1>
+              <p style={{color:"#94a3b8",fontSize:13,margin:0}}>Kies een level en versla alle opdrachten!</p>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <div className="levels-grid" style={{marginBottom:24}}>
               {LEVELS.map((l,i)=>(
-                <div key={i} className="ch" onClick={()=>startLevel(i)} style={{background:LB[i],borderRadius:16,padding:"17px 13px",cursor:"pointer",border:`1px solid ${LC[i]}40`,transition:"all .2s",position:"relative",overflow:"hidden"}}>
-                  <div style={{fontSize:28,marginBottom:5}}>{l.icon}</div>
-                  <div style={{fontWeight:700,fontSize:14}}>{l.title}</div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,.65)",marginTop:3}}>{l.description}</div>
-                  <div style={{marginTop:8,display:"flex",gap:2}}>{[1,2,3].map(s=><span key={s} style={{fontSize:13,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
-                  <div style={{position:"absolute",top:9,right:9,background:"rgba(0,0,0,.3)",borderRadius:7,padding:"2px 7px",fontSize:10,color:LC[i]}}>{i===1?6:l.questions.length} vr.</div>
+                <div key={i} className="ch" onClick={()=>startLevel(i)} style={{background:LB[i],borderRadius:16,padding:"20px 16px",cursor:"pointer",border:`1px solid ${LC[i]}40`,transition:"all .2s",position:"relative",overflow:"hidden"}}>
+                  <div style={{fontSize:32,marginBottom:8}}>{l.icon}</div>
+                  <div style={{fontWeight:700,fontSize:15}}>{l.title}</div>
+                  <div style={{fontSize:12,color:"rgba(255,255,255,.65)",marginTop:4,lineHeight:1.4}}>{l.description}</div>
+                  <div style={{marginTop:10,display:"flex",gap:3}}>{[1,2,3].map(s=><span key={s} style={{fontSize:14,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
+                  <div style={{position:"absolute",top:10,right:10,background:"rgba(0,0,0,.3)",borderRadius:7,padding:"3px 8px",fontSize:11,color:LC[i]}}>{i===1?6:l.questions.length} vr.</div>
                 </div>
               ))}
             </div>
-            <div style={{marginTop:20,background:"rgba(255,255,255,.03)",borderRadius:12,padding:14,border:"1px solid rgba(255,255,255,.06)"}}>
-              <div style={{fontSize:11,color:"#64748b",marginBottom:8}}>📚 LEERDOELEN</div>
+            <div style={{background:"rgba(255,255,255,.03)",borderRadius:14,padding:"16px 18px",border:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{fontSize:11,color:"#64748b",marginBottom:10,fontWeight:700,letterSpacing:1}}>📚 LEERDOELEN</div>
               {["Uitleggen wat de remweg is en waarvan deze afhangt","Remweg berekenen bij gewijzigde snelheid (n²-regel)","Reactietijd, reactie-afstand en stopafstand berekenen","Veiligheidsmaatregelen bij botsingen benoemen"].map((d,i)=>(
-                <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0",fontSize:13,color:"#cbd5e1"}}><span style={{color:LC[i]}}>▸</span> {d}</div>
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",fontSize:13,color:"#cbd5e1",borderBottom:i<3?"1px solid rgba(255,255,255,.04)":"none"}}><span style={{color:LC[i],fontSize:16}}>▸</span> {d}</div>
               ))}
             </div>
-            <button onClick={()=>setScreen("shop")} className="ch" style={{marginTop:12,width:"100%",padding:"14px 16px",background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:14,cursor:"pointer",display:"flex",alignItems:"center",gap:14,transition:"all .2s"}}>
-              <AvatarDisplay avatar={avatar} size={52}/>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontWeight:700,fontSize:14,color:"#f1f5f9"}}>🛍️ Avatar Winkel</div>
-                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Geef je punten uit aan items!</div>
-                <div style={{fontSize:12,color:"#fbbf24",marginTop:2}}>💰 {pts} punten beschikbaar</div>
-              </div>
-            </button>
           </div>
         )}
 
         {screen==="question"&&q&&(
           <div style={{animation:"fadeIn .3s ease"}}>
-            <div style={{marginBottom:16}}>
+            {/* Voortgangsbalk */}
+            <div style={{marginBottom:20}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:7,fontSize:12,color:"#64748b"}}>
                 <span>{level.icon} {level.title}</span><span>Vraag {qIdx+1} / {total}</span>
               </div>
-              <div style={{height:5,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+              <div style={{height:6,background:"rgba(255,255,255,.06)",borderRadius:999}}>
                 <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${((qIdx+(done?1:0))/total)*100}%`,transition:"width .5s ease"}}/>
               </div>
             </div>
 
-            <div style={{background:"rgba(255,255,255,.04)",borderRadius:16,padding:16,border:`1px solid ${LC[lvlIdx]}30`,marginBottom:12,animation:shake?"shake .6s ease":"none"}}>
-              <div style={{fontSize:14,fontWeight:600,lineHeight:1.55,marginBottom:10}}>{q.question}</div>
+            {/* Vraagkaart */}
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:16,padding:"20px 24px",border:`1px solid ${LC[lvlIdx]}30`,marginBottom:16,animation:shake?"shake .6s ease":"none"}}>
+              <div style={{fontSize:16,fontWeight:600,lineHeight:1.65,marginBottom: (q.type==="remweg_graph"||q.type==="stopafstand_show"||(q.type==="calc"||q.type==="stopafstand"))? 16 : 0}}>{q.question}</div>
 
               {q.type==="remweg_graph"&&<RemwegGrafiek showPoint={done?q.showPoint:null}/>}
               {q.type==="stopafstand_show"&&<StopafstandBar reactieAfstand={q.stopData.reactieAfstand} remweg={q.stopData.remweg}/>}
 
               {(q.type==="calc"||q.type==="stopafstand")&&q.given&&(
-                <div style={{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.2)",borderRadius:10,padding:12,marginBottom:8}}>
-                  <div style={{fontSize:11,color:"#fbbf24",marginBottom:6}}>📋 GEGEVEN</div>
-                  {q.given.map(([k,v])=><div key={k} style={{fontSize:14,fontFamily:"monospace",color:"#e2e8f0"}}>{k} = {v}</div>)}
+                <div style={{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.2)",borderRadius:10,padding:"12px 16px"}}>
+                  <div style={{fontSize:11,color:"#fbbf24",marginBottom:8,fontWeight:700,letterSpacing:.5}}>📋 GEGEVEN</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:"4px 24px"}}>
+                    {q.given.map(([k,v])=><div key={k} style={{fontSize:15,fontFamily:"monospace",color:"#e2e8f0"}}><span style={{color:"#94a3b8"}}>{k}</span> = {v}</div>)}
+                  </div>
                 </div>
               )}
-              {q.type==="stopafstand"&&done&&q.stopData&&<StopafstandBar reactieAfstand={q.stopData.reactieAfstand} remweg={q.stopData.remweg}/>}
+              {q.type==="stopafstand"&&done&&q.stopData&&<div style={{marginTop:12}}><StopafstandBar reactieAfstand={q.stopData.reactieAfstand} remweg={q.stopData.remweg}/></div>}
             </div>
 
-            <div style={{display:"grid",gap:9,marginBottom:12}}>
+            {/* Antwoordopties — 2×2 grid */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
               {q.options.map((opt,i)=>{
                 let bg="rgba(255,255,255,.04)",border="rgba(255,255,255,.1)",col="#e2e8f0";
                 if(sel===i&&!done){bg="rgba(251,191,36,.12)";border="#fbbf24";}
                 if(done){if(i===q.answer){bg="rgba(52,211,153,.12)";border="#34d399";col="#34d399";}else if(i===sel&&i!==q.answer){bg="rgba(239,68,68,.12)";border="#ef4444";col="#ef4444";}}
                 return(
                   <button key={i} className={!done?"ob":""} onClick={()=>{if(!done)setSel(i);}}
-                    style={{background:bg,border:`1.5px solid ${border}`,borderRadius:12,padding:"12px 14px",color:col,fontSize:14,fontWeight:500,cursor:done?"default":"pointer",textAlign:"left",transition:"all .2s",display:"flex",alignItems:"center",gap:10}}>
-                    <span style={{minWidth:22,height:22,borderRadius:6,background:"rgba(255,255,255,.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700}}>
+                    style={{background:bg,border:`1.5px solid ${border}`,borderRadius:14,padding:"16px 18px",color:col,fontSize:14,fontWeight:500,cursor:done?"default":"pointer",textAlign:"left",transition:"all .2s",display:"flex",alignItems:"flex-start",gap:12,width:"100%",minHeight:64}}>
+                    <span style={{minWidth:26,height:26,borderRadius:8,background:"rgba(255,255,255,.07)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0,marginTop:1}}>
                       {done?(i===q.answer?"✓":i===sel?"✗":String.fromCharCode(65+i)):String.fromCharCode(65+i)}
-                    </span>{opt}
+                    </span>
+                    <span style={{lineHeight:1.5}}>{opt}</span>
                   </button>
                 );
               })}
             </div>
 
+            {/* Feedback */}
             {done&&(
-              <div style={{background:correct?"rgba(52,211,153,.08)":"rgba(239,68,68,.08)",border:`1px solid ${correct?"#34d399":"#ef4444"}40`,borderRadius:12,padding:14,marginBottom:12,animation:"popIn .3s ease"}}>
-                <div style={{fontSize:13,fontWeight:600,color:correct?"#34d399":"#f87171",marginBottom:4}}>
+              <div style={{background:correct?"rgba(52,211,153,.08)":"rgba(239,68,68,.08)",border:`1px solid ${correct?"#34d399":"#ef4444"}40`,borderRadius:12,padding:"14px 18px",marginBottom:14,animation:"popIn .3s ease"}}>
+                <div style={{fontSize:14,fontWeight:600,color:correct?"#34d399":"#f87171",marginBottom:5}}>
                   {correct?"✅ Goed gedaan!":"❌ Niet helemaal..."}
                   {correct&&streak>2&&<span style={{marginLeft:8,color:"#fbbf24"}}>🔥 {streak}x streak! +5</span>}
                 </div>
-                <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.6}}>💡 {q.explanation}</div>
+                <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.65}}>💡 {q.explanation}</div>
               </div>
             )}
 
+            {/* Knop */}
             {!done?(
-              <button onClick={handleConfirm} disabled={sel===null} style={{width:"100%",padding:14,background:sel!==null?`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`:"rgba(255,255,255,.05)",border:"none",borderRadius:12,color:sel!==null?"#0a0f1e":"#475569",fontWeight:700,fontSize:15,cursor:sel!==null?"pointer":"default",transition:"all .2s"}}>
+              <button onClick={handleConfirm} disabled={sel===null} style={{width:"100%",padding:16,background:sel!==null?`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`:"rgba(255,255,255,.05)",border:"none",borderRadius:12,color:sel!==null?"#0a0f1e":"#475569",fontWeight:700,fontSize:16,cursor:sel!==null?"pointer":"default",transition:"all .2s"}}>
                 Controleer →
               </button>
             ):(
-              <button onClick={handleNext} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+              <button onClick={handleNext} style={{width:"100%",padding:16,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:16,cursor:"pointer"}}>
                 {qIdx+1<total?"Volgende vraag →":"Resultaat bekijken 🏆"}
               </button>
             )}
@@ -430,34 +499,48 @@ function App() {
         )}
 
         {screen==="result"&&(
-          <div style={{animation:"fadeIn .4s ease",textAlign:"center"}}>
-            <div style={{fontSize:52,marginBottom:6}}>{scores[lvlIdx]===total?"🏆":scores[lvlIdx]>=total*.6?"🎉":"💪"}</div>
-            <h2 style={{fontSize:21,fontWeight:800,margin:"0 0 4px"}}>{level.title} — Klaar!</h2>
-            <div style={{fontSize:14,color:"#94a3b8",marginBottom:20}}>{scores[lvlIdx]} van {total} goed beantwoord</div>
-            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:20}}>
-              {[1,2,3].map(s=><span key={s} style={{fontSize:34,opacity:stars[lvlIdx]>=s?1:.2,animation:stars[lvlIdx]>=s?`popIn .4s ease ${s*.15}s both`:"none"}}>⭐</span>)}
-            </div>
-            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:14,marginBottom:14,border:"1px solid rgba(255,255,255,.06)"}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:7}}>
-                <span style={{fontSize:13,color:"#94a3b8"}}>Score</span>
-                <span style={{fontSize:13,fontWeight:700,color:LC[lvlIdx]}}>{Math.round((scores[lvlIdx]/total)*100)}%</span>
+          <div style={{animation:"fadeIn .4s ease"}}>
+            {/* Hero */}
+            <div style={{textAlign:"center",marginBottom:28,padding:"32px 24px",background:"rgba(255,255,255,.03)",borderRadius:20,border:"1px solid rgba(255,255,255,.07)"}}>
+              <div style={{fontSize:72,marginBottom:12,lineHeight:1}}>{stars[lvlIdx]===3?"🏆":stars[lvlIdx]>=2?"🎉":stars[lvlIdx]===1?"💪":"😤"}</div>
+              <h2 style={{fontSize:26,fontWeight:800,margin:"0 0 6px"}}>{level.title} — Klaar!</h2>
+              <div style={{fontSize:15,color:"#94a3b8",marginBottom:20}}>{scores[lvlIdx]} van {total} goed beantwoord</div>
+              <div style={{display:"flex",justifyContent:"center",gap:14,marginBottom:20}}>
+                {[1,2,3].map(s=><span key={s} style={{fontSize:52,opacity:stars[lvlIdx]>=s?1:.2,animation:stars[lvlIdx]>=s?`popIn .4s ease ${s*.15}s both`:"none"}}>⭐</span>)}
               </div>
-              <div style={{height:7,background:"rgba(255,255,255,.06)",borderRadius:999}}>
-                <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${(scores[lvlIdx]/total)*100}%`,transition:"width 1s ease"}}/>
+              {/* Scorebalk */}
+              <div style={{maxWidth:400,margin:"0 auto"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:14}}>
+                  <span style={{color:"#94a3b8"}}>Score</span>
+                  <span style={{fontWeight:700,color:LC[lvlIdx]}}>{Math.round((scores[lvlIdx]/total)*100)}%</span>
+                </div>
+                <div style={{height:10,background:"rgba(255,255,255,.06)",borderRadius:999}}>
+                  <div style={{height:"100%",borderRadius:999,background:`linear-gradient(90deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,width:`${(scores[lvlIdx]/total)*100}%`,transition:"width 1s ease"}}/>
+                </div>
               </div>
             </div>
-            <div style={{background:"rgba(251,191,36,.06)",borderRadius:12,padding:12,marginBottom:14,border:"1px solid rgba(251,191,36,.15)"}}>
-              <div style={{fontSize:13,color:"#fbbf24"}}>🔥 Langste streak: {maxStr}x &nbsp;|&nbsp; 🎯 Totaal: {pts} punten</div>
+
+            {/* Stats */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+              <div style={{background:"rgba(251,191,36,.06)",borderRadius:14,padding:"16px 20px",border:"1px solid rgba(251,191,36,.15)",textAlign:"center"}}>
+                <div style={{fontSize:28,marginBottom:4}}>🔥</div>
+                <div style={{fontWeight:800,fontSize:22,color:"#fbbf24"}}>{maxStr}x</div>
+                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Langste streak</div>
+              </div>
+              <div style={{background:"rgba(96,165,250,.06)",borderRadius:14,padding:"16px 20px",border:"1px solid rgba(96,165,250,.15)",textAlign:"center"}}>
+                <div style={{fontSize:28,marginBottom:4}}>🎯</div>
+                <div style={{fontWeight:800,fontSize:22,color:"#60a5fa"}}>{pts}</div>
+                <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Totaal punten</div>
+              </div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              <button onClick={()=>startLevel(lvlIdx)} style={{padding:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>🔄 Opnieuw</button>
-              <button onClick={goHome} style={{padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,cursor:"pointer",fontSize:14}}>🏠 Levels</button>
+
+            {/* Knoppen */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+              <button onClick={()=>startLevel(lvlIdx)} style={{padding:16,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:14,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:15}}>🔄 Opnieuw</button>
+              <button onClick={goHome} style={{padding:16,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:14,color:"#0a0f1e",fontWeight:700,cursor:"pointer",fontSize:15}}>🏠 Levels</button>
             </div>
-            <button onClick={()=>setScreen("shop")} style={{width:"100%",padding:13,background:"linear-gradient(135deg,#1e3a5f,#1e293b)",border:"1px solid rgba(96,165,250,.3)",borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
-              <AvatarDisplay avatar={avatar} size={32}/> 🛍️ Naar de winkel
-            </button>
             {lvlIdx<LEVELS.length-1&&(
-              <button onClick={()=>startLevel(lvlIdx+1)} style={{width:"100%",padding:14,background:LB[lvlIdx+1],border:`1px solid ${LC[lvlIdx+1]}40`,borderRadius:12,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:14}}>
+              <button onClick={()=>startLevel(lvlIdx+1)} style={{width:"100%",padding:16,background:LB[lvlIdx+1],border:`1px solid ${LC[lvlIdx+1]}40`,borderRadius:14,color:"#f1f5f9",fontWeight:600,cursor:"pointer",fontSize:15}}>
                 Volgend level: {LEVELS[lvlIdx+1].icon} {LEVELS[lvlIdx+1].title} →
               </button>
             )}
@@ -511,7 +594,10 @@ function App() {
           </div>
         )}
 
-      </div>
+        </div>{/* end main-content */}
+          </div>
+        );
+      })()}{/* end sidebar+content IIFE */}
     </div>
   );
 }
