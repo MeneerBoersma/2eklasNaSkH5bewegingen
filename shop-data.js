@@ -85,20 +85,30 @@ function applyAppBackground(avatar) {
 }
 
 // Geeft een HTML-string terug die de avatar tekent.
+// Karakter staat gecentreerd in de container.
+// Hoed is absoluut gepositioneerd bovenop het karakter (overlapt het hoofd).
+// Badge is absoluut rechtsonder.
 function renderAvatarHTML(avatar, size) {
   size = size || 64;
   var r       = resolveAvatar(avatar);
-  var hatFs   = Math.round(size * .28);
-  var bodyFs  = Math.round(size * .46);
+  var bodyFs  = Math.round(size * .52);
+  var hatFs   = Math.round(size * .32);
+  var hatTop  = Math.round(size * .04);
   var badgeFs = Math.round(size * .24);
   var badgeSz = Math.round(size * .36);
+
+  var hatHTML = r.hat.emoji
+    ? '<div style="position:absolute;top:' + hatTop + 'px;left:0;right:0;display:flex;justify-content:center;pointer-events:none"><span style="font-size:' + hatFs + 'px;line-height:1">' + r.hat.emoji + '</span></div>'
+    : '';
   var badgeHTML = r.badge.emoji
     ? '<div style="position:absolute;bottom:4px;right:4px;width:' + badgeSz + 'px;height:' + badgeSz + 'px;border-radius:50%;background:rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:' + badgeFs + 'px;line-height:1">' + r.badge.emoji + '</div>'
     : '';
-  return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:16px;background:' + r.bg.color + ';display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex-shrink:0;border:2px solid rgba(255,255,255,.15);box-shadow:0 4px 20px rgba(0,0,0,.4);overflow:hidden">'
-    + '<div style="height:' + Math.round(size*.28) + 'px;display:flex;align-items:flex-end;justify-content:center"><span style="font-size:' + hatFs + 'px;line-height:1">' + (r.hat.emoji || ' ') + '</span></div>'
-    + '<div style="height:' + Math.round(size*.52) + 'px;display:flex;align-items:center;justify-content:center"><span style="font-size:' + bodyFs + 'px;line-height:1">' + r.body.emoji + '</span></div>'
-    + badgeHTML + '</div>';
+
+  return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:16px;background:' + r.bg.color + ';display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;border:2px solid rgba(255,255,255,.15);box-shadow:0 4px 20px rgba(0,0,0,.4);overflow:hidden">'
+    + '<span style="font-size:' + bodyFs + 'px;line-height:1;position:relative;top:' + Math.round(size * .06) + 'px">' + r.body.emoji + '</span>'
+    + hatHTML
+    + badgeHTML
+    + '</div>';
 }
 
 // ─── DEV MODE ─────────────────────────────────────────────────────────────────
