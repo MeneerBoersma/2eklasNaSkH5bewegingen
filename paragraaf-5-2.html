@@ -570,7 +570,7 @@ function App() {
                     <span style={{fontSize:18,flexShrink:0}}>{l.icon}</span>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:12,fontWeight:600,color:screen==="question"&&lvlIdx===i?"#f1f5f9":"#cbd5e1",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.title}</div>
-                      <div style={{display:"flex",gap:1,marginTop:2}}}>{[1,2,3].map(s=><span key={s} style={{fontSize:10,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
+                      <div style={{display:"flex",gap:1,marginTop:2}}>{[1,2,3].map(s=><span key={s} style={{fontSize:10,opacity:stars[i]>=s?1:.2}}>⭐</span>)}</div>
                     </div>
                   </div>
                 ))}
