@@ -30,6 +30,7 @@ function AvatarDisplay({ avatar, size=64 }) {
 
 
 
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const fmt  = n => Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".",",");
@@ -533,13 +534,12 @@ function App() {
           <span style={{fontSize:20}}>🚴</span>
           <div><div style={{fontWeight:700,fontSize:13}}>GemiddeldeSnelheidGame</div><div style={{fontSize:10,color:"#64748b"}}>2 HAVO · §5.2</div></div>
         </div>
-        </div>
-      {/* Sidebar + content */}
+      </div>
+
       {(()=>{
         const totalStars=stars.reduce((a,b)=>a+b,0), maxStars=stars.length*3;
         return (
           <div style={{display:"flex",minHeight:"calc(100vh - 49px)"}}>
-            {/* Sidebar */}
             <div className="sidebar">
               <div style={{textAlign:"center",marginBottom:20,padding:"16px 12px",background:"rgba(255,255,255,.04)",borderRadius:16,border:"1px solid rgba(255,255,255,.07)"}}>
                 <button onClick={()=>setScreen("shop")} style={{background:"none",border:"none",cursor:"pointer",display:"block",margin:"0 auto 10px"}}>
@@ -591,7 +591,6 @@ function App() {
                 🛍️ Avatar Winkel
               </button>
             </div>
-            {/* Main content */}
             <div className="main-content">
 
         {/* HOME */}
@@ -683,7 +682,7 @@ function App() {
                 Controleer →
               </button>
             ):(
-              <button onClick={handleNext} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+              <button onClick={handleNext} style={{width:"100%",padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,fontSize:16,cursor:"pointer"}}>
                 {qIdx+1<total?"Volgende vraag →":"Resultaat bekijken 🏆"}
               </button>
             )}
@@ -712,7 +711,7 @@ function App() {
               <div style={{fontSize:13,color:"#fbbf24"}}>🔥 Langste streak: {maxStr}x &nbsp;|&nbsp; 🎯 Totaal: {pts} punten</div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              <button onClick={()=>startLevel(lvlIdx)} style={{padding:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:15}}>🔄 Opnieuw</button>
+              <button onClick={()=>startLevel(lvlIdx)} style={{padding:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"#e2e8f0",fontWeight:600,cursor:"pointer",fontSize:14}}>🔄 Opnieuw</button>
               <button onClick={goHome} style={{padding:14,background:`linear-gradient(135deg,${LC[lvlIdx]},${LC[(lvlIdx+1)%4]})`,border:"none",borderRadius:12,color:"#0a0f1e",fontWeight:700,cursor:"pointer",fontSize:14}}>🏠 Levels</button>
             </div>
             {lvlIdx<LEVELS.length-1&&(
@@ -768,7 +767,8 @@ function App() {
             </button>
           </div>
         )}
-        </div>{/* end main-content */}
+
+            </div>{/* end main-content */}
           </div>
         );
       })()}{/* end sidebar+content */}
